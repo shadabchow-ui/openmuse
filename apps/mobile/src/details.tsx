@@ -33,11 +33,13 @@ import {
   type ProposalInput,
 } from "../../../packages/domain/src";
 import { DelegateSheet, NotificationsSheet, TaskDetail } from "./agent-ui";
+import { catalogView } from "./approval-catalog";
 import BrowserConsole from "./BrowserConsole";
 import { browserAddress, browserSite } from "./browser-address";
 import { ComputerSheet } from "./computer";
 import DateTimeEditor from "./DateTimeEditor";
 import { localDateTime, zonedInstant } from "./date-time";
+import { EmbeddedSurface } from "./embedded-surface";
 import PdfReader from "./PdfReader";
 import {
   Button,
@@ -76,6 +78,12 @@ export function Details({ detail }: { detail: Detail }) {
     return <EventEditor event={detail.event} draft={detail.draft} neighbors={detail.neighbors} />;
   if (detail.type === "file") return <FileDetail file={detail.file} />;
   if (detail.type === "review") return <ReviewDetail initial={detail.action} />;
+  if (detail.type === "surface")
+    return (
+      <Sheet title={detail.surface.title} onClose={close} wide>
+        <EmbeddedSurface surface={detail.surface} />
+      </Sheet>
+    );
   if (detail.type === "browser") return <BrowserDetail initial={detail.browser} />;
   return (
     <Sheet title="Your workspace" subtitle="A little room for everything." onClose={close}>
@@ -541,6 +549,48 @@ function EventEditor({
   );
 }
 function ReviewDetail({ initial }: { initial: ActionProposal }) {
+  return initial.kind === "approval.catalog" ? (
+    <CatalogReview initial={initial} />
+  ) : (
+    <ActionReview initial={initial} />
+  );
+}
+/**
+ * A read-only summary of a backend approval card. This client never decides it: the decision is made
+ * on the backend's own signed-in approval page, which the console view below opens.
+ */
+function CatalogReview({ initial }: { initial: ActionProposal }) {
+  const { workspace: w, close } = useWorkspace();
+  const action = w.actions.find((a) => a.id === initial.id) || initial;
+  const view = catalogView(action);
+  const consoleSurface = w.runtime.surfaces?.find((surface) => surface.kind === "console");
+  return (
+    <Sheet title={action.title} subtitle="Approvals are decided in the console." onClose={close}>
+      {view ? (
+        <Card style={{ gap: 13 }}>
+          {view.fields.map((field) => (
+            <ReviewLine key={field.label} label={field.label} value={field.value} />
+          ))}
+          <Chip tint={view.handoff ? colors.lavender : colors.green}>
+            {action.status.replace(/_/g, " ")}
+          </Chip>
+        </Card>
+      ) : (
+        <Text style={s.muted}>This approval could not be shown.</Text>
+      )}
+      {view?.handoff && (
+        <View style={{ gap: 12, marginTop: 16 }}>
+          <Text style={s.text}>Use the console to approve this.</Text>
+          {consoleSurface && <EmbeddedSurface surface={consoleSurface} />}
+        </View>
+      )}
+      <Button style={{ alignSelf: "flex-start", marginTop: 19 }} onPress={close}>
+        Done
+      </Button>
+    </Sheet>
+  );
+}
+function ActionReview({ initial }: { initial: ActionProposal }) {
   const { workspace: w, api, refresh, close, open } = useWorkspace();
   const [local, setLocal] = useState(initial);
   const [busy, setBusy] = useState(false);

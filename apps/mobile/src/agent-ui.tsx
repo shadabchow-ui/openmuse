@@ -1819,6 +1819,21 @@ export function AppsScreen() {
             />
           ))}
       </Card>
+      {!!workspace.runtime.surfaces?.length && (
+        <>
+          <Text style={s.heading}>Robot views</Text>
+          <Card style={{ paddingVertical: 3, backgroundColor: "#F4F5F6" }}>
+            {workspace.runtime.surfaces.map((surface) => (
+              <LinkRow
+                key={surface.id}
+                icon={Globe2}
+                title={surface.title}
+                onPress={() => open({ type: "surface", surface })}
+              />
+            ))}
+          </Card>
+        </>
+      )}
       <Button onPress={() => setSettings(!settings)}>
         {settings ? "Close agent settings" : "Personality & memory"}
       </Button>

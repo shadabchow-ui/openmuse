@@ -546,17 +546,19 @@ function WorkspaceShell({
                 ? detail.taskId
                 : detail.type === "file"
                   ? detail.file.id
-                  : detail.type === "browser"
-                    ? detail.browser.id
-                    : detail.type === "mail"
-                      ? detail.mail.id
-                      : detail.type === "review"
-                        ? detail.action.id
-                        : detail.type === "email"
-                          ? JSON.stringify(detail.draft)
-                          : detail.type === "event"
-                            ? detail.event?.id || "event-new"
-                            : detail.type
+                  : detail.type === "surface"
+                    ? detail.surface.id
+                    : detail.type === "browser"
+                      ? detail.browser.id
+                      : detail.type === "mail"
+                        ? detail.mail.id
+                        : detail.type === "review"
+                          ? detail.action.id
+                          : detail.type === "email"
+                            ? JSON.stringify(detail.draft)
+                            : detail.type === "event"
+                              ? detail.event?.id || "event-new"
+                              : detail.type
             }
             detail={detail}
           />
