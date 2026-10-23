@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-// @ts-expect-error plain ES module without type declarations
 import { addedLines, PATTERNS, scan } from "../../../scripts/check-private-identifiers.mjs";
 
 // Dirty inputs are assembled from parts so this file does not contain the words it tests for.
