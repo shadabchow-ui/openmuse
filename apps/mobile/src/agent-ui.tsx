@@ -34,6 +34,7 @@ import type {
   RunEvent,
 } from "../../../packages/domain/src/agent";
 import { useAgentWorkspace } from "./agent-workspace";
+import { capabilityOf } from "./capabilities";
 import { ActivityScreen, ConnectionsScreen } from "./screens";
 import {
   Button,
@@ -396,19 +397,20 @@ export function TaskDetail({ taskId }: { taskId: string }) {
             </Text>
           )}
           <View style={[s.row, { gap: 8, flexWrap: "wrap" }]}>
-            {["queued", "running", "scheduled", "waiting_input", "waiting_approval"].includes(
-              task.status,
-            ) && (
-              <Button
-                small
-                icon={Pause}
-                busy={busy}
-                onPress={() => void act("control", { action: "pause" })}
-              >
-                Pause
-              </Button>
-            )}
-            {task.status === "paused" && (
+            {capabilityOf(workspace.runtime, "taskPause") &&
+              ["queued", "running", "scheduled", "waiting_input", "waiting_approval"].includes(
+                task.status,
+              ) && (
+                <Button
+                  small
+                  icon={Pause}
+                  busy={busy}
+                  onPress={() => void act("control", { action: "pause" })}
+                >
+                  Pause
+                </Button>
+              )}
+            {capabilityOf(workspace.runtime, "taskPause") && task.status === "paused" && (
               <Button
                 small
                 icon={Play}
@@ -418,7 +420,7 @@ export function TaskDetail({ taskId }: { taskId: string }) {
                 Resume
               </Button>
             )}
-            {task.status === "failed" && (
+            {capabilityOf(workspace.runtime, "taskRetry") && task.status === "failed" && (
               <Button
                 small
                 icon={RefreshCw}
@@ -1719,7 +1721,7 @@ export function NotificationsSheet() {
   );
 }
 export function AppsScreen() {
-  const { navigate, open } = useWorkspace();
+  const { navigate, open, workspace } = useWorkspace();
   const { data, mutate } = useAgentWorkspace();
   const [query, setQuery] = useState("");
   const [settings, setSettings] = useState(false);
@@ -1761,26 +1763,33 @@ export function AppsScreen() {
       title: "Mail",
       detail: "Read messages and prepare replies",
       icon: Mail,
+      visible: capabilityOf(workspace.runtime, "mail"),
     },
     {
       section: "calendar" as const,
       title: "Calendar",
       detail: "Events and reviewed invitations",
       icon: CalendarDays,
+      visible: capabilityOf(workspace.runtime, "calendar"),
     },
     {
       section: "browser" as const,
       title: "Agent computer",
       detail: "Persistent browser sessions",
       icon: Globe2,
+      visible:
+        capabilityOf(workspace.runtime, "browser") || capabilityOf(workspace.runtime, "computer"),
     },
     {
       section: "files" as const,
       title: "Files",
       detail: "PDFs, forms and filled copies",
       icon: FileText,
+      visible: capabilityOf(workspace.runtime, "files"),
     },
   ];
+  const canEditIdentity = capabilityOf(workspace.runtime, "identityEdit");
+  const canWriteMemory = capabilityOf(workspace.runtime, "memoryWrite");
   return (
     <View style={{ gap: 22 }}>
       <AgentStatus />
@@ -1794,6 +1803,7 @@ export function AppsScreen() {
       <Text style={s.heading}>On your computer</Text>
       <Card style={{ paddingVertical: 3, backgroundColor: "#F4F5F6" }}>
         {shortcuts
+          .filter((item) => item.visible)
           .filter((item) =>
             `${item.title} ${item.detail}`.toLowerCase().includes(query.toLowerCase()),
           )
@@ -1814,74 +1824,80 @@ export function AppsScreen() {
       </Button>
       {settings && (
         <>
-          <Card style={{ gap: 10 }}>
-            <SectionHeading title="Your agent" />
-            <View style={[s.row, { gap: 16, justifyContent: "center", marginBottom: 12 }]}>
-              {(["sky", "sand", "lilac"] as const).map((item) => (
-                <Pressable
-                  key={item}
-                  accessibilityRole="radio"
-                  accessibilityLabel={`${statusLabel(item)} avatar`}
-                  accessibilityState={{ checked: avatar === item }}
-                  onPress={() => setAvatar(item)}
-                  style={{
-                    padding: 7,
-                    borderRadius: 24,
-                    backgroundColor: avatar === item ? colors.sky : colors.canvas,
-                  }}
-                >
-                  <Mascot size={62} variant={item} />
-                </Pressable>
-              ))}
-            </View>
-            <Field label="Name" value={name} onChangeText={setName} />
-            <View style={[s.row, { gap: 8 }]}>
-              {(["warm", "concise", "thoughtful"] as const).map((item) => (
-                <Button key={item} small primary={tone === item} onPress={() => setTone(item)}>
-                  {statusLabel(item)}
-                </Button>
-              ))}
-            </View>
-            <CheckRow
-              label="Show background updates in chat"
-              checked={showChatUpdates}
-              onPress={() => setShowChatUpdates(!showChatUpdates)}
-            />
-            <Text style={s.small}>
-              Activity and notifications always keep the full record, including requests for
-              approval.
-            </Text>
-            <Button
-              busy={busy}
-              disabled={!name.trim()}
-              onPress={() =>
-                void save("/identity", { name: name.trim(), tone, avatar, showChatUpdates })
-              }
-            >
-              Save preferences
-            </Button>
-          </Card>
+          {canEditIdentity && (
+            <Card style={{ gap: 10 }}>
+              <SectionHeading title="Your agent" />
+              <View style={[s.row, { gap: 16, justifyContent: "center", marginBottom: 12 }]}>
+                {(["sky", "sand", "lilac"] as const).map((item) => (
+                  <Pressable
+                    key={item}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`${statusLabel(item)} avatar`}
+                    accessibilityState={{ checked: avatar === item }}
+                    onPress={() => setAvatar(item)}
+                    style={{
+                      padding: 7,
+                      borderRadius: 24,
+                      backgroundColor: avatar === item ? colors.sky : colors.canvas,
+                    }}
+                  >
+                    <Mascot size={62} variant={item} />
+                  </Pressable>
+                ))}
+              </View>
+              <Field label="Name" value={name} onChangeText={setName} />
+              <View style={[s.row, { gap: 8 }]}>
+                {(["warm", "concise", "thoughtful"] as const).map((item) => (
+                  <Button key={item} small primary={tone === item} onPress={() => setTone(item)}>
+                    {statusLabel(item)}
+                  </Button>
+                ))}
+              </View>
+              <CheckRow
+                label="Show background updates in chat"
+                checked={showChatUpdates}
+                onPress={() => setShowChatUpdates(!showChatUpdates)}
+              />
+              <Text style={s.small}>
+                Activity and notifications always keep the full record, including requests for
+                approval.
+              </Text>
+              <Button
+                busy={busy}
+                disabled={!name.trim()}
+                onPress={() =>
+                  void save("/identity", { name: name.trim(), tone, avatar, showChatUpdates })
+                }
+              >
+                Save preferences
+              </Button>
+            </Card>
+          )}
           <Card style={{ gap: 12 }}>
             <SectionHeading title="Memory" />
             <Text style={s.muted}>Context you can inspect, correct or forget.</Text>
             {data?.memories.map((item) => (
-              <MemoryRow key={item.id} memory={item} />
+              <MemoryRow key={item.id} memory={item} canWrite={canWriteMemory} />
             ))}
-            <Field
-              label="Remember something about me"
-              value={memory}
-              onChangeText={setMemory}
-              placeholder="I prefer morning meetings"
-            />
-            <Button
-              busy={busy}
-              disabled={!memory.trim()}
-              onPress={() =>
-                void save("/memories", { text: memory.trim(), source: "User added in Apps" })
-              }
-            >
-              Remember
-            </Button>
+            {canWriteMemory && (
+              <>
+                <Field
+                  label="Remember something about me"
+                  value={memory}
+                  onChangeText={setMemory}
+                  placeholder="I prefer morning meetings"
+                />
+                <Button
+                  busy={busy}
+                  disabled={!memory.trim()}
+                  onPress={() =>
+                    void save("/memories", { text: memory.trim(), source: "User added in Apps" })
+                  }
+                >
+                  Remember
+                </Button>
+              </>
+            )}
           </Card>
         </>
       )}
@@ -1889,7 +1905,7 @@ export function AppsScreen() {
     </View>
   );
 }
-function MemoryRow({ memory }: { memory: AgentMemory }) {
+function MemoryRow({ memory, canWrite = true }: { memory: AgentMemory; canWrite?: boolean }) {
   const { mutate } = useAgentWorkspace();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(memory.text);
@@ -1919,20 +1935,22 @@ function MemoryRow({ memory }: { memory: AgentMemory }) {
       <Text style={s.small}>
         {memory.source} · {stamp(memory.createdAt)}
       </Text>
-      <View style={[s.row, { gap: 8 }]}>
-        {editing ? (
-          <Button small busy={busy} disabled={!text.trim()} onPress={() => void act(false)}>
-            Save correction
+      {canWrite && (
+        <View style={[s.row, { gap: 8 }]}>
+          {editing ? (
+            <Button small busy={busy} disabled={!text.trim()} onPress={() => void act(false)}>
+              Save correction
+            </Button>
+          ) : (
+            <Button small onPress={() => setEditing(true)}>
+              Edit
+            </Button>
+          )}
+          <Button small danger busy={busy} onPress={() => void act(true)}>
+            Forget
           </Button>
-        ) : (
-          <Button small onPress={() => setEditing(true)}>
-            Edit
-          </Button>
-        )}
-        <Button small danger busy={busy} onPress={() => void act(true)}>
-          Forget
-        </Button>
-      </View>
+        </View>
+      )}
       <ErrorNotice error={error} />
     </View>
   );
