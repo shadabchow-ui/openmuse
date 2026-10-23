@@ -56,6 +56,7 @@ test("a valid proposal parses from an object and from a JSON string", () => {
     assert.equal(result.view.title, "Make a doc");
     assert.deepEqual(result.view.steps, [
       {
+        nodeId: "n1",
         goal: "Create a document",
         operations: "docs.create, docs.share",
         tier: "T1",
