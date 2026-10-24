@@ -39,6 +39,7 @@ import { DesktopToolCard } from "./desktop-tool-card";
 import { confirmedJevSelection, displayJevUserMessage, latestJevPanelId } from "./jev-actions";
 import { JevInteractionContext, JevToolCard } from "./jev-tool-card";
 import { MailToolCard } from "./mail-tool-card";
+import { PlanCard } from "./plan-card";
 import { SearchToolCard } from "./search-tool-card";
 import { FileThreadCard, TaskThreadCard } from "./thread-artifacts";
 import { type Selection, useMuseThread } from "./threads";
@@ -111,6 +112,12 @@ export function WorkspaceTools() {
     render: ({ result, status }) => (
       <ServerToolCard name="Task" result={result} loading={status !== "complete"} />
     ),
+  });
+  useRenderTool({
+    name: "propose_mission",
+    description: "Show a proposed mission with a first-party Start button",
+    parameters: displayParameters,
+    render: ({ result, status }) => <PlanCard result={result} loading={status !== "complete"} />,
   });
   useRenderTool({
     name: "agent_status",

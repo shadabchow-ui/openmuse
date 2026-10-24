@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { RuntimeExtensions } from "./muse-contract.js";
 
 export type WorkspaceMode = "sample" | "live";
 export type Section =
@@ -148,7 +149,7 @@ export interface ActionProposal {
   connectionId?: string;
   id: string;
   title: string;
-  kind: ProposalInput["kind"];
+  kind: ProposalInput["kind"] | "approval.catalog";
   data: Record<string, unknown>;
   status:
     | "awaiting_review"
@@ -195,7 +196,7 @@ export interface Workspace {
     configured: boolean;
     openbotConfigured: boolean;
     richThreads?: boolean;
-  };
+  } & RuntimeExtensions;
 }
 
 /** Provider-independent boundary: OpenBot/AG-UI runs never dictate presentation. */

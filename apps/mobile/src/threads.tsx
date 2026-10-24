@@ -11,6 +11,7 @@ import {
 } from "lucide-react-native";
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { capabilityOf } from "./capabilities";
 import { Button, colors, ErrorNotice, Field, LinkRow, Sheet, s } from "./ui";
 import { useWorkspace } from "./workspace";
 
@@ -229,34 +230,38 @@ export function ThreadsSheet({ onClose }: { onClose: () => void }) {
                     <Field label="Conversation name" value={name} onChangeText={setName} />
                   )}
                   <View style={[s.row, { gap: 8 }]}>
-                    <Button
-                      small
-                      disabled={threads.isMutating || (editing === thread.id && !name.trim())}
-                      onPress={() => {
-                        if (editing === thread.id)
-                          void mutate(() => threads.renameThread(thread.id, name.trim()));
-                        else {
-                          setEditing(thread.id);
-                          setName(thread.name || "");
+                    {capabilityOf(workspace.runtime, "threadRename") && (
+                      <Button
+                        small
+                        disabled={threads.isMutating || (editing === thread.id && !name.trim())}
+                        onPress={() => {
+                          if (editing === thread.id)
+                            void mutate(() => threads.renameThread(thread.id, name.trim()));
+                          else {
+                            setEditing(thread.id);
+                            setName(thread.name || "");
+                          }
+                        }}
+                      >
+                        {editing === thread.id ? "Save name" : "Rename"}
+                      </Button>
+                    )}
+                    {capabilityOf(workspace.runtime, "threadArchive") && (
+                      <Button
+                        small
+                        icon={Archive}
+                        disabled={threads.isMutating}
+                        onPress={() =>
+                          void mutate(() =>
+                            thread.archived
+                              ? threads.unarchiveThread(thread.id)
+                              : threads.archiveThread(thread.id),
+                          )
                         }
-                      }}
-                    >
-                      {editing === thread.id ? "Save name" : "Rename"}
-                    </Button>
-                    <Button
-                      small
-                      icon={Archive}
-                      disabled={threads.isMutating}
-                      onPress={() =>
-                        void mutate(() =>
-                          thread.archived
-                            ? threads.unarchiveThread(thread.id)
-                            : threads.archiveThread(thread.id),
-                        )
-                      }
-                    >
-                      {thread.archived ? "Restore" : "Archive"}
-                    </Button>
+                      >
+                        {thread.archived ? "Restore" : "Archive"}
+                      </Button>
+                    )}
                   </View>
                 </View>
               ))}
@@ -298,26 +303,35 @@ export function ThreadsSheet({ onClose }: { onClose: () => void }) {
           </>
         )}
         <View style={s.divider} />
-        <LinkRow
-          icon={Plus}
-          title="Delegate task"
-          detail="A plan, document, or spending summary"
-          onPress={() => {
-            onClose();
-            open({ type: "delegate" });
-          }}
-        />
-        <LinkRow
-          icon={Monitor}
-          title="Agent computer"
-          detail="Browser, sessions and documents"
-          onPress={() => {
-            onClose();
-            open({ type: "computer" });
-          }}
-        />
-        <LinkRow icon={CalendarDays} title="Calendar" onPress={() => go("calendar")} />
-        <LinkRow icon={FileText} title="Files" onPress={() => go("files")} />
+        {capabilityOf(workspace.runtime, "delegate") && (
+          <LinkRow
+            icon={Plus}
+            title="Delegate task"
+            detail="A plan, document, or spending summary"
+            onPress={() => {
+              onClose();
+              open({ type: "delegate" });
+            }}
+          />
+        )}
+        {(capabilityOf(workspace.runtime, "browser") ||
+          capabilityOf(workspace.runtime, "computer")) && (
+          <LinkRow
+            icon={Monitor}
+            title="Agent computer"
+            detail="Browser, sessions and documents"
+            onPress={() => {
+              onClose();
+              open({ type: "computer" });
+            }}
+          />
+        )}
+        {capabilityOf(workspace.runtime, "calendar") && (
+          <LinkRow icon={CalendarDays} title="Calendar" onPress={() => go("calendar")} />
+        )}
+        {capabilityOf(workspace.runtime, "files") && (
+          <LinkRow icon={FileText} title="Files" onPress={() => go("files")} />
+        )}
         <LinkRow icon={Settings2} title="Apps & settings" onPress={() => go("apps")} />
         <Button small icon={RefreshCw} onPress={() => void mutate(refresh)}>
           Refresh workspace

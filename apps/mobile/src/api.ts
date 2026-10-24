@@ -1,43 +1,47 @@
 import { Platform } from "react-native";
-import { readApiPayload } from "./api-response";
+import {
+  apiConfig,
+  apiPath,
+  ExternalAuthRequired,
+  makeApiConfig,
+  openSession,
+  sendRequest,
+} from "./api-config";
 
-export const API_URL = (
-  process.env.EXPO_PUBLIC_API_URL ||
-  (Platform.OS === "android" ? "http://10.0.2.2:8787" : "http://localhost:8787")
-).replace(/\/$/, "");
+export { apiConfig, apiPath, ExternalAuthRequired };
+
+// Same literal env accesses as `apiConfig` so Metro can inline them; only the Android default differs.
+export const API_URL = makeApiConfig(
+  {
+    EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
+    EXPO_PUBLIC_API_PREFIX: process.env.EXPO_PUBLIC_API_PREFIX,
+    EXPO_PUBLIC_AUTH_MODE: process.env.EXPO_PUBLIC_AUTH_MODE,
+    EXPO_PUBLIC_TELEMETRY: process.env.EXPO_PUBLIC_TELEMETRY,
+    EXPO_PUBLIC_BRAND_NAME: process.env.EXPO_PUBLIC_BRAND_NAME,
+  },
+  Platform.OS === "android",
+).apiUrl;
 
 export class MuseApi {
   constructor(readonly token: string) {}
   async request<T>(path: string, body?: unknown, method?: string): Promise<T> {
-    const response = await fetch(`${API_URL}${path}`, {
-      method: method ?? (body === undefined ? "GET" : "POST"),
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        ...(body === undefined || body instanceof FormData
-          ? {}
-          : { "Content-Type": "application/json" }),
-      },
-      body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
-    });
-    const payload = await readApiPayload<T>(response);
-    return payload;
+    return sendRequest<T>(
+      apiConfig,
+      API_URL,
+      (input, init) => fetch(input, init),
+      this.token,
+      path,
+      body,
+      method,
+    );
   }
   url(path: string) {
-    return path.startsWith("http") ? path : `${API_URL}${path}`;
+    return path.startsWith("http") ? path : `${API_URL}${apiPath(path)}`;
   }
 }
 
 export async function createSession(
   accessKey?: string,
 ): Promise<{ token: string; mode: "sample" | "live" }> {
-  const response = await fetch(`${API_URL}/api/session`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ accessKey }),
-  });
-  const payload = await readApiPayload<{ token: string; mode: "sample" | "live" }>(
-    response,
-    "Could not open your workspace.",
-  );
-  return payload;
+  return openSession(apiConfig, API_URL, accessKey);
 }

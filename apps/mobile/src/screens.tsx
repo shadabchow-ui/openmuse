@@ -38,7 +38,7 @@ import type {
   CalendarEvent,
   EmailDraft,
 } from "../../../packages/domain/src";
-import { API_URL } from "./api";
+import { API_URL, apiPath } from "./api";
 import { browserAddress } from "./browser-address";
 import { localDateTime, startOfZonedDay, zonedInstant } from "./date-time";
 import {
@@ -957,13 +957,17 @@ export function FilesScreen() {
         form.append("file", file.file, file.name);
         artifact = await api.request<Artifact>("/api/files", form);
       } else {
-        const result = await FileSystem.uploadAsync(`${API_URL}/api/files`, file.uri, {
-          httpMethod: "POST",
-          uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-          fieldName: "file",
-          mimeType: "application/pdf",
-          headers: { Authorization: `Bearer ${api.token}` },
-        });
+        const result = await FileSystem.uploadAsync(
+          `${API_URL}${apiPath("/api/files")}`,
+          file.uri,
+          {
+            httpMethod: "POST",
+            uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+            fieldName: "file",
+            mimeType: "application/pdf",
+            headers: { Authorization: `Bearer ${api.token}` },
+          },
+        );
         const payload = JSON.parse(result.body);
         if (result.status < 200 || result.status >= 300)
           throw new Error(payload.error || "Could not import this PDF.");
