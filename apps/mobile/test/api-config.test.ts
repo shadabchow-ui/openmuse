@@ -212,3 +212,15 @@ test("telemetry-off sets the two opt-out variables only when telemetry is off", 
     [null, null],
   );
 });
+
+test("sign-in origins and embed prefixes default to none and are parsed from the build settings", () => {
+  const empty = makeApiConfig({});
+  assert.deepEqual(empty.signInOrigins, []);
+  assert.deepEqual(empty.embedPrefixes, []);
+  const set = makeApiConfig({
+    EXPO_PUBLIC_SIGN_IN_ORIGINS: "https://login.example,http://insecure.example",
+    EXPO_PUBLIC_EMBED_PATH_PREFIXES: "/embed,/",
+  });
+  assert.deepEqual(set.signInOrigins, ["https://login.example"]);
+  assert.deepEqual(set.embedPrefixes, ["/embed"]);
+});

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { ActionProposal } from "../../../packages/domain/src";
-import { catalogView } from "../src/approval-catalog";
+import { catalogView, reviewKind } from "../src/approval-catalog";
 
 const data = {
   requestId: "r1",
@@ -68,4 +68,22 @@ test("invalid data gives null", () => {
 
 test("other kinds are not catalog actions", () => {
   assert.equal(catalogView(action({ kind: "email.send" as ActionProposal["kind"] })), null);
+});
+
+test("external mode renders a catalog summary or the fixed notice, never the upstream approve and deny review", () => {
+  assert.equal(reviewKind("approval.catalog", "external"), "catalog");
+  for (const kind of [
+    "calendar.event",
+    "document.create",
+    "email.send",
+    "",
+    "approval.catalog.x",
+  ]) {
+    assert.equal(reviewKind(kind, "external"), "none", kind);
+  }
+});
+
+test("access-key mode keeps the upstream review for other kinds", () => {
+  assert.equal(reviewKind("approval.catalog", "accessKey"), "catalog");
+  assert.equal(reviewKind("calendar.event", "accessKey"), "action");
 });

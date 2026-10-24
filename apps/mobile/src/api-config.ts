@@ -1,4 +1,5 @@
 import { ApiError, readApiPayload } from "./api-response";
+import { parseEmbedPrefixes, parseOrigins } from "./surface-url";
 
 export interface ApiConfig {
   apiUrl: string;
@@ -6,6 +7,10 @@ export interface ApiConfig {
   authMode: "accessKey" | "external";
   telemetryOff: boolean;
   brandName: string | undefined;
+  /** `https:` origins a sign-in redirect may name; same-origin paths are always allowed. Default: none. */
+  signInOrigins: string[];
+  /** Path prefixes that may be framed. Default: none, so no backend view is framed. */
+  embedPrefixes: string[];
 }
 
 type Env = Record<string, string | undefined>;
@@ -27,6 +32,8 @@ export function makeApiConfig(env: Env, isAndroid = false): ApiConfig {
     authMode,
     telemetryOff: telemetry === "off" || (authMode === "external" && !telemetry),
     brandName: brandName ? brandName : undefined,
+    signInOrigins: parseOrigins(env.EXPO_PUBLIC_SIGN_IN_ORIGINS),
+    embedPrefixes: parseEmbedPrefixes(env.EXPO_PUBLIC_EMBED_PATH_PREFIXES),
   };
 }
 
@@ -44,6 +51,8 @@ export const apiConfig: ApiConfig = makeApiConfig(
     EXPO_PUBLIC_AUTH_MODE: process.env.EXPO_PUBLIC_AUTH_MODE,
     EXPO_PUBLIC_TELEMETRY: process.env.EXPO_PUBLIC_TELEMETRY,
     EXPO_PUBLIC_BRAND_NAME: process.env.EXPO_PUBLIC_BRAND_NAME,
+    EXPO_PUBLIC_SIGN_IN_ORIGINS: process.env.EXPO_PUBLIC_SIGN_IN_ORIGINS,
+    EXPO_PUBLIC_EMBED_PATH_PREFIXES: process.env.EXPO_PUBLIC_EMBED_PATH_PREFIXES,
   },
   false,
 );

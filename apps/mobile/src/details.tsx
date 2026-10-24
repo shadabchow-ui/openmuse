@@ -33,7 +33,8 @@ import {
   type ProposalInput,
 } from "../../../packages/domain/src";
 import { DelegateSheet, NotificationsSheet, TaskDetail } from "./agent-ui";
-import { catalogView } from "./approval-catalog";
+import { apiConfig } from "./api-config";
+import { catalogView, reviewKind } from "./approval-catalog";
 import BrowserConsole from "./BrowserConsole";
 import { browserAddress, browserSite } from "./browser-address";
 import { ComputerSheet } from "./computer";
@@ -549,10 +550,21 @@ function EventEditor({
   );
 }
 function ReviewDetail({ initial }: { initial: ActionProposal }) {
-  return initial.kind === "approval.catalog" ? (
-    <CatalogReview initial={initial} />
-  ) : (
-    <ActionReview initial={initial} />
+  const kind = reviewKind(initial.kind, apiConfig.authMode);
+  if (kind === "catalog") return <CatalogReview initial={initial} />;
+  if (kind === "none") return <ReviewUnavailable initial={initial} />;
+  return <ActionReview initial={initial} />;
+}
+/** External mode: nothing but a catalog summary is shown; there is no decide call on this path. */
+function ReviewUnavailable({ initial }: { initial: ActionProposal }) {
+  const { close } = useWorkspace();
+  return (
+    <Sheet title={initial.title} subtitle="Approvals are decided in the console." onClose={close}>
+      <Text style={s.muted}>This approval could not be shown.</Text>
+      <Button style={{ alignSelf: "flex-start", marginTop: 19 }} onPress={close}>
+        Done
+      </Button>
+    </Sheet>
   );
 }
 /**

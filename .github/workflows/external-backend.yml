@@ -28,11 +28,19 @@ jobs:
       - run: pnpm test
       - run: node scripts/check-patch-surface.mjs
       - run: node scripts/check-private-identifiers.mjs
+      # Metro caches inlined EXPO_PUBLIC_* values, so a second export in the same checkout can silently reuse the
+      # first build. Clear the cache on every export and assert the configured prefix is (or is not) in the bundle.
       - name: Web export with the default environment
-        run: pnpm --dir apps/mobile exec expo export --platform web --output-dir dist/web
+        run: pnpm --dir apps/mobile exec expo export --platform web --clear --output-dir dist/web
       - name: Web export in external mode
         env:
           EXPO_PUBLIC_API_PREFIX: /api/gateway
           EXPO_PUBLIC_AUTH_MODE: external
           EXPO_PUBLIC_TELEMETRY: "off"
-        run: pnpm --dir apps/mobile exec expo export --platform web --output-dir dist/web-ext
+        run: pnpm --dir apps/mobile exec expo export --platform web --clear --output-dir dist/web-ext
+      - name: Check each bundle was built with its own configuration
+        run: |
+          set -eu
+          if grep -rqF "/api/gateway" apps/mobile/dist/web; then echo "default bundle contains the external prefix"; exit 1; fi
+          if ! grep -rqF "/api/gateway" apps/mobile/dist/web-ext; then echo "external bundle lacks the configured prefix"; exit 1; fi
+          if cmp -s <(cat apps/mobile/dist/web/_expo/static/js/web/*.js) <(cat apps/mobile/dist/web-ext/_expo/static/js/web/*.js); then echo "bundles are identical"; exit 1; fi

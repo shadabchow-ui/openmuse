@@ -12,6 +12,8 @@ All are read as literal `process.env.EXPO_PUBLIC_*` accesses in `apps/mobile/src
 | `EXPO_PUBLIC_API_PREFIX` | `/api` | Replaces the leading `/api` of every request path, including the runtime URL and the upload URL. Must start with `/`; a trailing slash is removed; anything else falls back to `/api` |
 | `EXPO_PUBLIC_AUTH_MODE` | `accessKey` | `external` uses a cookie session: no access-key form, no `Authorization` header, `credentials: "same-origin"` on every request. A 401 carrying a sign-in URL navigates there once (absolute `https:` URL or a same-origin path only); otherwise a fixed "Sign-in is not configured." screen is shown |
 | `EXPO_PUBLIC_TELEMETRY` | on; `off` in external mode unless set | `off` sets `COPILOTKIT_TELEMETRY_DISABLED=true` and `DO_NOT_TRACK=1` before the CopilotKit packages load |
+| `EXPO_PUBLIC_SIGN_IN_ORIGINS` | none | Comma-separated `https:` origins (no credentials, no path) that a sign-in redirect may name. Same-origin paths are always allowed; any other absolute URL is refused, including credential forms and mixed case |
+| `EXPO_PUBLIC_EMBED_PATH_PREFIXES` | none | Comma-separated same-origin path prefixes that may be framed. With none set, no backend view is framed. Matches whole path segments |
 | `EXPO_PUBLIC_BRAND_NAME` | unset | Replaces the visible product name; the backend can also send a brand in its workspace snapshot |
 
 ## What the backend can send
@@ -22,7 +24,9 @@ All are read as literal `process.env.EXPO_PUBLIC_*` accesses in `apps/mobile/src
 
 - **Plan card.** Renders the result of the `propose_mission` tool from validated data and offers one "Start this mission" button (disabled when the preview failed its checks or has expired). Anything that does not match the schema shows "Could not show this plan." and no button.
 - **Approval summary.** An action of kind `approval.catalog` is shown as a read-only summary. This client does not approve or deny it; it tells the person to use the console and, when the backend lists a console view, offers a button that opens it. Approvals are decided only on the backend's own signed-in approval page.
-- **Embedded view.** Backend views listed in `runtime.surfaces` open in a same-origin iframe on the web (sandbox `allow-scripts allow-same-origin`, no referrer) and as a text fallback on native. Paths are validated by `safeSurfacePath`; sign-in targets by `safeSignInTarget`. Nothing else navigates to, or frames, a URL taken from server data.
+- **Embedded view.** Backend views listed in `runtime.surfaces` are framed on the web only when the path starts with a configured prefix (sandbox `allow-scripts` alone, so the frame has an opaque origin and cannot reach the page; no referrer). A `console` view is opened, never framed; native shows a text fallback. Paths are validated by `safeSurfacePath`; sign-in targets by `safeSignInTarget`. Nothing else navigates to, or frames, a URL taken from server data. Pages that are framed must be self-contained or fed by `postMessage`; they get no cookie-authenticated requests. Using `allow-same-origin` instead would need a recorded owner risk acceptance and `frame-ancestors 'self'` plus a strict CSP on every framed response.
+- **Approvals in external mode.** Only an `approval.catalog` summary is shown; any other kind shows a fixed notice. The client has no decide call on this path.
+- **Building.** Export with `--clear`, for both the default and the external build, then check the bundle for the configured prefix (the workflow does this); without `--clear`, a second export in the same checkout can reuse the first bundle.
 
 ## Guards
 

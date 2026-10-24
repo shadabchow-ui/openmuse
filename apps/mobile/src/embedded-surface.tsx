@@ -1,18 +1,18 @@
 import { createElement } from "react";
 import { Platform, Text, View } from "react-native";
 import type { RuntimeSurface } from "../../../packages/domain/src/muse-contract";
-import { safeSurfacePath } from "./surface-url";
+import { apiConfig } from "./api-config";
+import { SURFACE_SANDBOX, safeSurfacePath, surfaceMode } from "./surface-url";
 import { Button, s } from "./ui";
 
-/** The iframe may run its own scripts but may not navigate the page, submit forms, open windows or dialogs. */
-export const SURFACE_SANDBOX = "allow-scripts allow-same-origin";
-
-/** A same-origin view supplied by the backend. The path is validated here, whatever the caller did. */
+/** A backend view. Only listed path prefixes are framed (default: none); a console view is opened, never framed. */
 export function EmbeddedSurface({ surface }: { surface: RuntimeSurface }) {
+  const mode = surfaceMode(surface, Platform.OS, apiConfig.embedPrefixes);
   const path = safeSurfacePath(surface.path);
-  if (path === null) return <Text style={s.muted}>This view is not available.</Text>;
-  if (Platform.OS !== "web") return <Text style={s.muted}>Open this view in the web app.</Text>;
-  if (surface.kind === "console") {
+  if (mode === "unavailable" || path === null)
+    return <Text style={s.muted}>This view is not available.</Text>;
+  if (mode === "text") return <Text style={s.muted}>Open this view in the web app.</Text>;
+  if (mode === "open") {
     return (
       <Button primary onPress={() => window.location.assign(path)}>
         Open console

@@ -33,3 +33,15 @@ export function catalogView(action: ActionProposal): CatalogView | null {
     handoff: action.status === "awaiting_review",
   };
 }
+
+/**
+ * Which review the client may render. In external auth mode only a catalog summary is shown; any other kind
+ * gets a fixed notice, so the client has no path that decides an approval there.
+ */
+export function reviewKind(
+  kind: string,
+  authMode: "accessKey" | "external",
+): "catalog" | "action" | "none" {
+  if (kind === "approval.catalog") return "catalog";
+  return authMode === "external" ? "none" : "action";
+}

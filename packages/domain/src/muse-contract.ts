@@ -72,11 +72,6 @@ export const approvalCatalogDataSchema = z.strictObject({
 });
 export type ApprovalCatalogData = z.infer<typeof approvalCatalogDataSchema>;
 
-export const decideBodySchema = z.strictObject({
-  decision: z.enum(["approve", "deny"]),
-  hash: z.string(),
-});
-
 const micros = z.string().regex(/^[0-9]+$/);
 
 export const planPreviewStepSchema = z.strictObject({

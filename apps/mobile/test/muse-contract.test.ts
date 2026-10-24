@@ -3,7 +3,6 @@ import { test } from "node:test";
 import {
   approvalCatalogDataSchema,
   capabilitiesSchema,
-  decideBodySchema,
   errorBodySchema,
   planPreviewSchema,
   proposeMissionResultSchema,
@@ -135,16 +134,6 @@ test("approval catalog data: eight strings, strict", () => {
   assert.equal(approvalCatalogDataSchema.safeParse(missing).success, false);
   assert.equal(
     approvalCatalogDataSchema.safeParse({ ...catalog, reversible: true }).success,
-    false,
-  );
-});
-
-test("decide body: approve or deny with a hash", () => {
-  assert.ok(decideBodySchema.safeParse({ decision: "approve", hash: "h" }).success);
-  assert.equal(decideBodySchema.safeParse({ decision: "maybe", hash: "h" }).success, false);
-  assert.equal(decideBodySchema.safeParse({ decision: "deny" }).success, false);
-  assert.equal(
-    decideBodySchema.safeParse({ decision: "deny", hash: "h", surface: "x" }).success,
     false,
   );
 });

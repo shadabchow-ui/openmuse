@@ -13,15 +13,60 @@ function isLocalPath(value: string): boolean {
   return value.startsWith("/") && !value.startsWith("//") && !value.includes("\\");
 }
 
-/** Absolute `https:` URL or same-origin path; anything else (`javascript:`, `data:`, `//host`, non-strings) is refused. */
-export function safeSignInTarget(value: unknown): string | null {
+/**
+ * Sandbox for a framed view. Scripts only: no `allow-same-origin` (the frame gets an opaque origin, so it cannot
+ * reach the page or drop its own sandbox), and no navigation, forms, popups, modals or downloads.
+ */
+export const SURFACE_SANDBOX = "allow-scripts";
+
+/** Origins named in a comma-separated build setting: `https:` only, no credentials, no path. Anything else is dropped. */
+export function parseOrigins(raw: string | undefined): string[] {
+  const out: string[] = [];
+  for (const part of (raw ?? "").split(",")) {
+    const text = part.trim();
+    if (text === "" || hasControlOrSpace(text)) continue;
+    try {
+      const url = new URL(text);
+      const bare = url.pathname === "/" && url.search === "" && url.hash === "";
+      if (
+        url.protocol === "https:" &&
+        url.hostname !== "" &&
+        url.username === "" &&
+        url.password === "" &&
+        bare
+      ) {
+        if (!out.includes(url.origin)) out.push(url.origin);
+      }
+    } catch {
+      // not a URL: dropped
+    }
+  }
+  return out;
+}
+
+/**
+ * A same-origin path, or an absolute `https:` URL whose origin is in `allowedOrigins` (default: none). Credentials in
+ * the URL are refused and the origin is compared after parsing, so `https://a@evil.example` and `HTTPS://EVIL.example`
+ * never match an allowed origin.
+ */
+export function safeSignInTarget(
+  value: unknown,
+  allowedOrigins: readonly string[] = [],
+): string | null {
   if (typeof value !== "string" || value === "" || value.length > 2048) return null;
   if (hasControlOrSpace(value)) return null;
   if (isLocalPath(value)) return value;
   if (!/^https:\/\/[^/?#\\]+/i.test(value) || value.includes("\\")) return null;
   try {
     const url = new URL(value);
-    return url.protocol === "https:" && url.hostname !== "" ? value : null;
+    if (
+      url.protocol !== "https:" ||
+      url.hostname === "" ||
+      url.username !== "" ||
+      url.password !== ""
+    )
+      return null;
+    return allowedOrigins.includes(url.origin) ? value : null;
   } catch {
     return null;
   }
@@ -36,4 +81,35 @@ export function safeSurfacePath(value: unknown): string | null {
   if (value.slice(0, firstSlash).includes(":")) return null;
   if (/%(2e|2f|5c)/i.test(value)) return null;
   return value;
+}
+
+/** Path prefixes (comma-separated build setting) that may be framed: plain paths, no query, no root. Default: none. */
+export function parseEmbedPrefixes(raw: string | undefined): string[] {
+  const out: string[] = [];
+  for (const part of (raw ?? "").split(",")) {
+    const text = part.trim().replace(/\/+$/, "");
+    if (text.length < 2 || /[?#]/.test(text) || safeSurfacePath(text) === null) continue;
+    if (!out.includes(text)) out.push(text);
+  }
+  return out;
+}
+
+export function isEmbedPathAllowed(path: string, prefixes: readonly string[]): boolean {
+  const pathname = path.split(/[?#]/)[0] ?? "";
+  return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+export type SurfaceMode = "unavailable" | "text" | "open" | "frame";
+
+/** What the client does with a backend-listed view. A console view is only ever opened, never framed. */
+export function surfaceMode(
+  surface: { kind: string; path: unknown },
+  platform: string,
+  embedPrefixes: readonly string[],
+): SurfaceMode {
+  const path = safeSurfacePath(surface.path);
+  if (path === null) return "unavailable";
+  if (platform !== "web") return "text";
+  if (surface.kind === "console") return "open";
+  return isEmbedPathAllowed(path, embedPrefixes) ? "frame" : "unavailable";
 }

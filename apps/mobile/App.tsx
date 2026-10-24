@@ -161,7 +161,7 @@ export default function App() {
 }
 /** External auth mode: no key field. Navigates once to a validated sign-in target, else shows a fixed notice. */
 function ExternalSignIn({ url, retry }: { url: string | null; retry: () => void }) {
-  const target = safeSignInTarget(url);
+  const target = safeSignInTarget(url, apiConfig.signInOrigins);
   const navigated = useRef(false);
   const canNavigate = target !== null && Platform.OS === "web" && typeof window !== "undefined";
   useEffect(() => {
