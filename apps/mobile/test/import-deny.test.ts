@@ -5,9 +5,12 @@ import { dirname, join, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+  declaredPackages,
   deniedImports,
   isDeniedImport,
+  packageName,
   sourceFiles,
+  undeclaredImports,
 } from "../../../scripts/check-patch-surface.mjs";
 
 const mobile = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -19,15 +22,7 @@ test("the committed tree imports none of the denied libraries", () => {
   assert.deepEqual(deniedImports(sourceFiles(repo)), []);
 });
 
-const DENIED = [
-  "@radix-ui/react-dialog",
-  "radix-ui",
-  "tailwindcss",
-  "next-themes",
-  "lucide-react",
-  "@acme/robot-ui",
-  "@acme/robot-ui-tokens",
-];
+const DENIED = ["@radix-ui/react-dialog", "radix-ui", "tailwindcss", "next-themes", "lucide-react"];
 
 test("a fixture file with each denied specifier fails in a temporary copy of the tree", () => {
   const base = mkdtempSync(join(tmpdir(), "import-deny-"));
@@ -76,4 +71,46 @@ test("lucide-react-native and other libraries still pass", () => {
     deniedImports([{ path: "x.tsx", text: 'import { Bell } from "lucide-react-native";' }]),
     [],
   );
+});
+
+test("an import of a package that is not a declared dependency is flagged, whatever its name", () => {
+  const declared = declaredPackages(resolve(mobile, "..", ".."));
+  assert.ok(declared.has("lucide-react-native"));
+  const line = (text: string) => [{ path: "apps/mobile/src/x.ts", line: 1, text }];
+  for (const specifier of [
+    "@scope/internal-widgets",
+    "@scope/internal-widgets/deep",
+    "some-registry-only-package",
+    "not-declared/sub/path",
+  ]) {
+    assert.equal(
+      undeclaredImports(line(`import x from "${specifier}";`), declared).length,
+      1,
+      specifier,
+    );
+    assert.equal(
+      undeclaredImports(line(`const x = require("${specifier}");`), declared).length,
+      1,
+      specifier,
+    );
+  }
+  for (const specifier of [
+    "react",
+    "react-native",
+    "lucide-react-native",
+    "zod",
+    "./local",
+    "../../../packages/domain/src",
+    "node:path",
+    "@copilotkit/react-native",
+  ]) {
+    assert.deepEqual(
+      undeclaredImports(line(`import x from "${specifier}";`), declared),
+      [],
+      specifier,
+    );
+  }
+  assert.equal(packageName("@scope/a/b"), "@scope/a");
+  assert.equal(packageName("plain/sub"), "plain");
+  assert.equal(packageName("./x"), null);
 });

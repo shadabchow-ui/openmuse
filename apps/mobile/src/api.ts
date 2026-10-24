@@ -5,9 +5,8 @@ import {
   ExternalAuthRequired,
   makeApiConfig,
   openSession,
-  requestInit,
+  sendRequest,
 } from "./api-config";
-import { readApiPayload } from "./api-response";
 
 export { apiConfig, apiPath, ExternalAuthRequired };
 
@@ -26,12 +25,15 @@ export const API_URL = makeApiConfig(
 export class MuseApi {
   constructor(readonly token: string) {}
   async request<T>(path: string, body?: unknown, method?: string): Promise<T> {
-    const response = await fetch(
-      `${API_URL}${apiPath(path)}`,
-      requestInit(apiConfig, this.token, method ?? (body === undefined ? "GET" : "POST"), body),
+    return sendRequest<T>(
+      apiConfig,
+      API_URL,
+      (input, init) => fetch(input, init),
+      this.token,
+      path,
+      body,
+      method,
     );
-    const payload = await readApiPayload<T>(response);
-    return payload;
   }
   url(path: string) {
     return path.startsWith("http") ? path : `${API_URL}${apiPath(path)}`;

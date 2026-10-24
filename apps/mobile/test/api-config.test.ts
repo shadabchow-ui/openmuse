@@ -5,10 +5,13 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   ExternalAuthRequired,
+  ExternalModeBlocked,
+  isUpstreamDecidePath,
   makeApiConfig,
   mapApiPath,
   openSession,
   requestInit,
+  sendRequest,
 } from "../src/api-config";
 
 const external = { EXPO_PUBLIC_AUTH_MODE: "external" };
@@ -223,4 +226,57 @@ test("sign-in origins and embed prefixes default to none and are parsed from the
   });
   assert.deepEqual(set.signInOrigins, ["https://login.example"]);
   assert.deepEqual(set.embedPrefixes, ["/embed"]);
+});
+
+const externalConfig = makeApiConfig({
+  EXPO_PUBLIC_AUTH_MODE: "external",
+  EXPO_PUBLIC_API_PREFIX: "/api/gateway",
+});
+const accessKeyConfig = makeApiConfig({});
+const throwingFetch = async (): Promise<Response> => {
+  throw new Error("fetch must not be called");
+};
+
+test("external mode never sends the upstream decide call, in any spelling", async () => {
+  for (const path of [
+    "/api/actions/run1/decide",
+    "/api/actions/run1/decide?x=1",
+    "/api/actions/run1/decide/",
+    "/api/actions/%72un1/%64ecide",
+    "/api/gateway/actions/run1/decide",
+    "/API/ACTIONS/run1/DECIDE",
+    "/api/actions/a%2Fb/decide",
+  ]) {
+    assert.ok(isUpstreamDecidePath(path), path);
+    for (const body of [
+      undefined,
+      { decision: "approve", hash: "h" },
+      { decision: "deny", hash: "h" },
+    ]) {
+      await assert.rejects(
+        sendRequest(externalConfig, "", throwingFetch, "t", path, body),
+        (error: unknown) => error instanceof ExternalModeBlocked,
+        path,
+      );
+    }
+  }
+});
+
+test("other calls still go out in external mode, and access-key mode keeps the decide call", async () => {
+  const seen: string[] = [];
+  const okFetch = async (url: string): Promise<Response> => {
+    seen.push(url);
+    return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
+  };
+  await sendRequest(externalConfig, "", okFetch, "t", "/api/actions");
+  await sendRequest(externalConfig, "", okFetch, "t", "/api/threads/decide-later");
+  await sendRequest(accessKeyConfig, "http://x", okFetch, "t", "/api/actions/run1/decide", {
+    decision: "deny",
+    hash: "h",
+  });
+  assert.deepEqual(seen, [
+    "/api/gateway/actions",
+    "/api/gateway/threads/decide-later",
+    "http://x/api/actions/run1/decide",
+  ]);
 });

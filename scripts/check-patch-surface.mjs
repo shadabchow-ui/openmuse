@@ -6,6 +6,8 @@
 // 1. Every path changed against origin/main must be on the allowed list below.
 // 2. No file under apps/mobile/src or apps/mobile/App.tsx may import a web-only UI library
 //    (the import-deny list). This reads the committed tree, not just the diff.
+// 3. Every package imported on a line the branch added must be declared in apps/mobile/package.json, so a
+//    package that is not a declared dependency (for example one from a private registry) cannot slip in.
 // Exit codes: 0 clean, 1 violations, 2 origin/main is missing.
 
 import { execFileSync } from "node:child_process";
@@ -28,6 +30,8 @@ export const ALLOWED = [
   "apps/mobile/src/approval-catalog.ts",
   "apps/mobile/src/plan-card.tsx",
   "apps/mobile/src/embedded-surface.tsx",
+  "apps/mobile/src/embed-messages.ts",
+  "apps/mobile/src/embed-frame.tsx",
   "apps/mobile/index.js",
   "apps/mobile/App.tsx",
   "apps/mobile/src/chat.tsx",
@@ -41,6 +45,7 @@ export const ALLOWED = [
   "apps/mobile/test/*.test.ts",
   "scripts/check-patch-surface.mjs",
   "scripts/check-private-identifiers.mjs",
+  "scripts/check-bundle-config.mjs",
   ".github/workflows/external-backend.yml",
   "docs/EXTERNAL-BACKEND.md",
 ];
@@ -68,8 +73,7 @@ export function isDeniedImport(specifier) {
     specifier === "next-themes" ||
     specifier.startsWith("next-themes/") ||
     specifier === "lucide-react" ||
-    specifier.startsWith("lucide-react/") ||
-    /^@[^/]+\/robot-ui(-tokens)?(\/|$)/.test(specifier)
+    specifier.startsWith("lucide-react/")
   );
 }
 
@@ -84,6 +88,43 @@ export function deniedImports(files) {
         if (isDeniedImport(match[1])) hits.push({ path, line: index + 1, specifier: match[1] });
       }
     });
+  }
+  return hits;
+}
+
+const BUILTINS = new Set([
+  "assert",
+  "child_process",
+  "crypto",
+  "fs",
+  "os",
+  "path",
+  "url",
+  "util",
+  "events",
+  "stream",
+]);
+
+/** Package name of a bare specifier, or null for a relative path, a `node:` import or a built-in module. */
+export function packageName(specifier) {
+  if (specifier.startsWith(".") || specifier.startsWith("/") || specifier.startsWith("node:"))
+    return null;
+  const parts = specifier.split("/");
+  const name = specifier.startsWith("@") ? parts.slice(0, 2).join("/") : parts[0];
+  return BUILTINS.has(name) ? null : name;
+}
+
+/**
+ * Imports of packages that are not declared dependencies. `lines` are `{path, line, text}` for added lines only,
+ * `declared` is a Set of package names from apps/mobile/package.json.
+ */
+export function undeclaredImports(lines, declared) {
+  const hits = [];
+  for (const { path, line, text } of lines) {
+    for (const match of text.matchAll(SPECIFIER)) {
+      const name = packageName(match[1]);
+      if (name !== null && !declared.has(name)) hits.push({ path, line, specifier: match[1] });
+    }
   }
   return hits;
 }
@@ -108,6 +149,16 @@ export function sourceFiles(base) {
   }));
 }
 
+/** Package names declared in apps/mobile/package.json (dependencies, devDependencies, peerDependencies). */
+export function declaredPackages(base) {
+  const pkg = JSON.parse(readFileSync(join(base, "apps", "mobile", "package.json"), "utf8"));
+  return new Set([
+    ...Object.keys(pkg.dependencies ?? {}),
+    ...Object.keys(pkg.devDependencies ?? {}),
+    ...Object.keys(pkg.peerDependencies ?? {}),
+  ]);
+}
+
 function main() {
   try {
     execFileSync("git", ["rev-parse", "--verify", "--quiet", "origin/main"], {
@@ -128,6 +179,31 @@ function main() {
   for (const path of changed) if (!isAllowed(path)) problems.push(`path not allowed: ${path}`);
   for (const hit of deniedImports(sourceFiles(root))) {
     problems.push(`denied import: ${hit.path}:${hit.line} imports ${hit.specifier}`);
+  }
+  const declared = declaredPackages(root);
+  const added = execFileSync(
+    "git",
+    ["diff", "-U0", "origin/main...HEAD", "--", "apps/mobile/src", "apps/mobile/App.tsx"],
+    {
+      cwd: root,
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+    },
+  );
+  const addedSource = [];
+  let file = null;
+  let lineNo = 0;
+  for (const row of added.split("\n")) {
+    if (row.startsWith("+++ ")) file = row.startsWith("+++ b/") ? row.slice(6) : null;
+    else if (row.startsWith("@@")) lineNo = Number(/\+(\d+)/.exec(row)?.[1] ?? 0);
+    else if (file !== null && row.startsWith("+") && !row.startsWith("+++")) {
+      if (/\.(ts|tsx|js|jsx|mjs|cjs)$/.test(file))
+        addedSource.push({ path: file, line: lineNo, text: row.slice(1) });
+      lineNo += 1;
+    }
+  }
+  for (const hit of undeclaredImports(addedSource, declared)) {
+    problems.push(`undeclared package: ${hit.path}:${hit.line} imports ${hit.specifier}`);
   }
   for (const problem of problems) console.log(problem);
   console.log(

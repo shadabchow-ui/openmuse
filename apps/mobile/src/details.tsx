@@ -34,7 +34,7 @@ import {
 } from "../../../packages/domain/src";
 import { DelegateSheet, NotificationsSheet, TaskDetail } from "./agent-ui";
 import { apiConfig } from "./api-config";
-import { catalogView, reviewKind } from "./approval-catalog";
+import { catalogView, routeReview } from "./approval-catalog";
 import BrowserConsole from "./BrowserConsole";
 import { browserAddress, browserSite } from "./browser-address";
 import { ComputerSheet } from "./computer";
@@ -550,10 +550,11 @@ function EventEditor({
   );
 }
 function ReviewDetail({ initial }: { initial: ActionProposal }) {
-  const kind = reviewKind(initial.kind, apiConfig.authMode);
-  if (kind === "catalog") return <CatalogReview initial={initial} />;
-  if (kind === "none") return <ReviewUnavailable initial={initial} />;
-  return <ActionReview initial={initial} />;
+  return routeReview(initial.kind, apiConfig.authMode, {
+    catalog: () => <CatalogReview initial={initial} />,
+    action: () => <ActionReview initial={initial} />,
+    none: () => <ReviewUnavailable initial={initial} />,
+  });
 }
 /** External mode: nothing but a catalog summary is shown; there is no decide call on this path. */
 function ReviewUnavailable({ initial }: { initial: ActionProposal }) {

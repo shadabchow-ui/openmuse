@@ -88,6 +88,49 @@ export function requestInit(
   };
 }
 
+/** Thrown instead of sending a request that external mode must never make. */
+export class ExternalModeBlocked extends Error {
+  constructor() {
+    super("This action is not available here.");
+    this.name = "ExternalModeBlocked";
+  }
+}
+
+/** The upstream approve and deny call. In external mode an approval is decided only on the backend's own page. */
+export function isUpstreamDecidePath(path: string): boolean {
+  let decoded = path;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch {
+    // an undecodable path is checked as written
+  }
+  return [path, decoded].some((candidate) =>
+    /\/actions\/[^/?#]*\/decide(?:[/?#]|$)/i.test(candidate),
+  );
+}
+
+export function assertRequestAllowed(config: ApiConfig, path: string): void {
+  if (config.authMode === "external" && isUpstreamDecidePath(path)) throw new ExternalModeBlocked();
+}
+
+/** One request, after the external-mode guard. `MuseApi.request` is a thin wrapper over this. */
+export async function sendRequest<T>(
+  config: ApiConfig,
+  apiUrl: string,
+  fetchImpl: FetchLike,
+  token: string,
+  path: string,
+  body?: unknown,
+  method?: string,
+): Promise<T> {
+  assertRequestAllowed(config, path);
+  const response = await fetchImpl(
+    `${apiUrl}${mapApiPath(config, path)}`,
+    requestInit(config, token, method ?? (body === undefined ? "GET" : "POST"), body),
+  );
+  return readApiPayload<T>(response);
+}
+
 export async function openSession(
   config: ApiConfig,
   apiUrl: string,

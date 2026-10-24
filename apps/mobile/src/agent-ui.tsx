@@ -1821,7 +1821,7 @@ export function AppsScreen() {
       </Card>
       {!!workspace.runtime.surfaces?.length && (
         <>
-          <Text style={s.heading}>Robot views</Text>
+          <Text style={s.heading}>Views</Text>
           <Card style={{ paddingVertical: 3, backgroundColor: "#F4F5F6" }}>
             {workspace.runtime.surfaces.map((surface) => (
               <LinkRow

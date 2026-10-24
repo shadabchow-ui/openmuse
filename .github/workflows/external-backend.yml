@@ -27,20 +27,42 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: node scripts/check-patch-surface.mjs
-      - run: node scripts/check-private-identifiers.mjs
-      # Metro caches inlined EXPO_PUBLIC_* values, so a second export in the same checkout can silently reuse the
-      # first build. Clear the cache on every export and assert the configured prefix is (or is not) in the bundle.
-      - name: Web export with the default environment
+      - name: Public-boundary guard
+        env:
+          PRIVATE_PATTERNS: ${{ secrets.PRIVATE_IDENTIFIER_PATTERNS }}
+        run: |
+          if [ -n "$PRIVATE_PATTERNS" ]; then
+            printf '%s' "$PRIVATE_PATTERNS" > "$RUNNER_TEMP/patterns.json"
+            export PRIVATE_IDENTIFIER_PATTERNS_FILE="$RUNNER_TEMP/patterns.json"
+          fi
+          node scripts/check-private-identifiers.mjs
+  # One job per configuration, so each export runs on a fresh checkout with no shared build cache, and the
+  # bundle is checked for the configuration it should carry (an exit code alone does not show which one was built).
+  exports:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [default, external]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - run: pnpm install --frozen-lockfile
+      - name: Web export, default environment
+        if: matrix.mode == 'default'
         run: pnpm --dir apps/mobile exec expo export --platform web --clear --output-dir dist/web
-      - name: Web export in external mode
+      - name: Web export, external mode
+        if: matrix.mode == 'external'
         env:
           EXPO_PUBLIC_API_PREFIX: /api/gateway
           EXPO_PUBLIC_AUTH_MODE: external
           EXPO_PUBLIC_TELEMETRY: "off"
-        run: pnpm --dir apps/mobile exec expo export --platform web --clear --output-dir dist/web-ext
-      - name: Check each bundle was built with its own configuration
-        run: |
-          set -eu
-          if grep -rqF "/api/gateway" apps/mobile/dist/web; then echo "default bundle contains the external prefix"; exit 1; fi
-          if ! grep -rqF "/api/gateway" apps/mobile/dist/web-ext; then echo "external bundle lacks the configured prefix"; exit 1; fi
-          if cmp -s <(cat apps/mobile/dist/web/_expo/static/js/web/*.js) <(cat apps/mobile/dist/web-ext/_expo/static/js/web/*.js); then echo "bundles are identical"; exit 1; fi
+        run: pnpm --dir apps/mobile exec expo export --platform web --clear --output-dir dist/web
+      - name: Check the bundle carries the configuration it was built for
+        run: node scripts/check-bundle-config.mjs apps/mobile/dist/web ${{ matrix.mode }} /api/gateway

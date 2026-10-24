@@ -45,3 +45,12 @@ export function reviewKind(
   if (kind === "approval.catalog") return "catalog";
   return authMode === "external" ? "none" : "action";
 }
+
+/** Picks and builds the review for an action. Only the chosen view is built, so an unchosen one is never run. */
+export function routeReview<T>(
+  kind: string,
+  authMode: "accessKey" | "external",
+  views: { catalog: () => T; action: () => T; none: () => T },
+): T {
+  return views[reviewKind(kind, authMode)]();
+}

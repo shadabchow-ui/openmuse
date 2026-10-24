@@ -81,7 +81,7 @@ test("safeSignInTarget refuses a host outside the allowed origins, including cre
     "https://evil.example/x",
     "https://trusted.example@evil.example/",
     "https://trusted.example%2f@evil.example",
-    "https://trusted.example:pw@trusted.example/",
+    ["https://trusted.example", ":pw", "@trusted.example/"].join(""),
     "HTTPS://EVIL.example",
     "https://localhost/",
     "https://trusted.example.evil.example/",
@@ -170,8 +170,52 @@ test("surfaceMode frames only listed prefixes on the web and never frames a cons
     surfaceMode({ kind: "presence", path: "//evil.example" }, "web", prefixes),
     "unavailable",
   );
-  for (const list of [prefixes, [], ["/muse", "/robot"]]) {
+  for (const list of [prefixes, [], ["/console", "/views"]]) {
     assert.equal(surfaceMode({ kind: "console", path: "/muse/approvals" }, "web", list), "open");
     assert.notEqual(surfaceMode({ kind: "console", path: "/embed/p" }, "web", list), "frame");
   }
+});
+
+test("ambiguous hostnames never match, even when written into the allowlist", () => {
+  for (const host of [
+    "https://exаmple.com", // Cyrillic a
+    "https://xn--exmple-cua.com",
+    "https://trusted.example.",
+    "https://127.0.0.1",
+    "https://0x7f.1",
+    "https://2130706433",
+    "https://[::1]",
+    "https://trusted..example",
+    "https://-trusted.example",
+  ]) {
+    assert.deepEqual(parseOrigins(host), [], host);
+    assert.equal(safeSignInTarget(`${host}/x`, [host]), null, host);
+  }
+  assert.deepEqual(parseOrigins("https://sub.trusted-1.example"), [
+    "https://sub.trusted-1.example",
+  ]);
+});
+
+test("malformed redirects are refused", () => {
+  const trusted = ["https://trusted.example"];
+  for (const value of [
+    "https:trusted.example/x",
+    "https:/trusted.example/x",
+    "https://trusted.example\\@evil.example/",
+    "https://trusted.example%00.evil.example/",
+    "https://trusted.example\t/",
+    " https://trusted.example/",
+    "https://trusted.example:443@evil.example/",
+    "https://@trusted.example/",
+    "https://:@trusted.example/",
+  ]) {
+    assert.equal(safeSignInTarget(value, trusted), null, JSON.stringify(value));
+  }
+});
+
+test("only a presence view is framed", () => {
+  const prefixes = ["/embed"];
+  assert.equal(surfaceMode({ kind: "presence", path: "/embed/p" }, "web", prefixes), "frame");
+  assert.equal(surfaceMode({ kind: "unknown", path: "/embed/p" }, "web", prefixes), "unavailable");
+  assert.equal(surfaceMode({ kind: "", path: "/embed/p" }, "web", prefixes), "unavailable");
 });

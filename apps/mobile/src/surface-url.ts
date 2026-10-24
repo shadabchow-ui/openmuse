@@ -19,6 +19,17 @@ function isLocalPath(value: string): boolean {
  */
 export const SURFACE_SANDBOX = "allow-scripts";
 
+/**
+ * A plain DNS name: lower-case ASCII letters, digits, hyphens and dots, no trailing dot, no punycode label, not an
+ * IP address in any notation. Anything else is ambiguous (look-alike or numeric hosts) and never matches.
+ */
+export function isPlainHostname(host: string): boolean {
+  if (host === "" || host.length > 253 || host.endsWith(".")) return false;
+  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/.test(host)) return false;
+  if (/^[0-9.]+$/.test(host)) return false;
+  return !host.split(".").some((label) => label.startsWith("xn--"));
+}
+
 /** Origins named in a comma-separated build setting: `https:` only, no credentials, no path. Anything else is dropped. */
 export function parseOrigins(raw: string | undefined): string[] {
   const out: string[] = [];
@@ -30,7 +41,7 @@ export function parseOrigins(raw: string | undefined): string[] {
       const bare = url.pathname === "/" && url.search === "" && url.hash === "";
       if (
         url.protocol === "https:" &&
-        url.hostname !== "" &&
+        isPlainHostname(url.hostname) &&
         url.username === "" &&
         url.password === "" &&
         bare
@@ -57,11 +68,12 @@ export function safeSignInTarget(
   if (hasControlOrSpace(value)) return null;
   if (isLocalPath(value)) return value;
   if (!/^https:\/\/[^/?#\\]+/i.test(value) || value.includes("\\")) return null;
+  if ((/^https:\/\/([^/?#]*)/i.exec(value)?.[1] ?? "").includes("@")) return null;
   try {
     const url = new URL(value);
     if (
       url.protocol !== "https:" ||
-      url.hostname === "" ||
+      !isPlainHostname(url.hostname) ||
       url.username !== "" ||
       url.password !== ""
     )
@@ -101,7 +113,7 @@ export function isEmbedPathAllowed(path: string, prefixes: readonly string[]): b
 
 export type SurfaceMode = "unavailable" | "text" | "open" | "frame";
 
-/** What the client does with a backend-listed view. A console view is only ever opened, never framed. */
+/** What the client does with a backend-listed view. Only a `presence` view on a listed prefix is framed; a console view is only ever opened. */
 export function surfaceMode(
   surface: { kind: string; path: unknown },
   platform: string,
@@ -111,5 +123,6 @@ export function surfaceMode(
   if (path === null) return "unavailable";
   if (platform !== "web") return "text";
   if (surface.kind === "console") return "open";
+  if (surface.kind !== "presence") return "unavailable";
   return isEmbedPathAllowed(path, embedPrefixes) ? "frame" : "unavailable";
 }
