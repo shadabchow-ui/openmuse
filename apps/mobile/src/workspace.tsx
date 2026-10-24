@@ -10,6 +10,7 @@ import type {
   Section,
   Workspace,
 } from "../../../packages/domain/src";
+import type { RuntimeSurface } from "../../../packages/domain/src/muse-contract";
 import type { MuseApi } from "./api";
 export type Detail =
   | { type: "mail"; mail: Mail }
@@ -22,6 +23,7 @@ export type Detail =
   | { type: "delegate"; goalId?: string; milestoneId?: string }
   | { type: "notifications" }
   | { type: "computer" }
+  | { type: "surface"; surface: RuntimeSurface }
   | { type: "menu" };
 export interface WorkspaceContextValue {
   workspace: Workspace;

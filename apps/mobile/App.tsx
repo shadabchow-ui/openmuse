@@ -12,10 +12,11 @@ import {
   SquareCheck,
   X,
 } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -32,12 +33,22 @@ import {
   IdeasScreen,
 } from "./src/agent-ui";
 import { AgentWorkspaceProvider, useAgentWorkspace } from "./src/agent-workspace";
-import { API_URL, createSession, MuseApi } from "./src/api";
+import {
+  API_URL,
+  apiConfig,
+  apiPath,
+  createSession,
+  ExternalAuthRequired,
+  MuseApi,
+} from "./src/api";
+import { brandName, hasCustomBrand } from "./src/brand";
+import { visibleNav } from "./src/capabilities";
 import { ChatScreen, WorkspaceTools } from "./src/chat";
 import { ComputerEntry } from "./src/computer";
 import { ComputerDraftProvider } from "./src/computer-drafts";
 import { Details } from "./src/details";
 import { BrowserScreen, CalendarScreen, FilesScreen, MailScreen } from "./src/screens";
+import { safeSignInTarget } from "./src/surface-url";
 import { ThreadsProvider, ThreadsSheet, useMuseThread } from "./src/threads";
 import { Button, Card, colors, ErrorNotice, Field, IconButton, Mascot, s } from "./src/ui";
 import { type Detail, useWorkspace, WorkspaceContext } from "./src/workspace";
@@ -71,14 +82,18 @@ export default function App() {
   const [accessKey, setAccessKey] = useState("");
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
+  // Only set in external auth mode, after the server asked for sign-in; null means no sign-in URL.
+  const [signIn, setSignIn] = useState<{ url: string | null }>();
   const connect = useCallback(async (key?: string) => {
     setBusy(true);
     setError("");
+    setSignIn(undefined);
     try {
       const session = await createSession(key);
       setToken(session.token);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (e instanceof ExternalAuthRequired) setSignIn({ url: e.signInUrl });
+      else setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
@@ -91,8 +106,9 @@ export default function App() {
       <StatusBar style="dark" />
       {token ? (
         <CopilotKitProvider
-          runtimeUrl={`${API_URL}/api/copilotkit`}
-          headers={{ Authorization: `Bearer ${token}` }}
+          runtimeUrl={`${API_URL}${apiPath("/api/copilotkit")}`}
+          headers={apiConfig.authMode === "external" ? {} : { Authorization: `Bearer ${token}` }}
+          credentials={apiConfig.authMode === "external" ? "same-origin" : undefined}
         >
           <WorkspaceApp token={token} />
         </CopilotKitProvider>
@@ -107,15 +123,17 @@ export default function App() {
           }}
         >
           <View style={{ width: "100%", maxWidth: 420, gap: 22, alignItems: "center" }}>
-            <Mascot size={72} />
+            {!hasCustomBrand(undefined, apiConfig) && <Mascot size={72} />}
             <Text
               style={{ fontSize: 32, color: colors.text, letterSpacing: -1, fontWeight: "500" }}
             >
-              Welcome to OpenMuse.
+              Welcome to {brandName(undefined, apiConfig)}.
             </Text>
             <Text style={[s.muted, { textAlign: "center" }]}>A little room for your day.</Text>
             {busy ? (
               <ActivityIndicator color={colors.blueDark} />
+            ) : signIn ? (
+              <ExternalSignIn url={signIn.url} retry={() => void connect()} />
             ) : (
               <Card style={{ width: "100%" }}>
                 <ErrorNotice error={error} />
@@ -139,6 +157,25 @@ export default function App() {
         </SafeAreaView>
       )}
     </SafeAreaProvider>
+  );
+}
+/** External auth mode: no key field. Navigates once to a validated sign-in target, else shows a fixed notice. */
+function ExternalSignIn({ url, retry }: { url: string | null; retry: () => void }) {
+  const target = safeSignInTarget(url, apiConfig.signInOrigins);
+  const navigated = useRef(false);
+  const canNavigate = target !== null && Platform.OS === "web" && typeof window !== "undefined";
+  useEffect(() => {
+    if (canNavigate && !navigated.current) {
+      navigated.current = true;
+      window.location.assign(target);
+    }
+  }, [canNavigate, target]);
+  if (canNavigate) return <ActivityIndicator color={colors.blueDark} />;
+  return (
+    <Card style={{ width: "100%" }}>
+      <Text style={s.text}>Sign-in is not configured.</Text>
+      <Button onPress={retry}>Try again</Button>
+    </Card>
   );
 }
 function WorkspaceApp({ token }: { token: string }) {
@@ -261,7 +298,7 @@ function WorkspaceShell({
     data?.tasks.find(
       (task) => task.status === "waiting_approval" || task.status === "waiting_input",
     ) || data?.tasks.find((task) => task.status === "running");
-  const agentName = data?.identity.name || "OpenMuse";
+  const agentName = data?.identity.name || brandName(workspace.runtime, apiConfig);
   const status = activeTask
     ? activeTask.status === "waiting_approval"
       ? `Ready to review · ${activeTask.title}`
@@ -447,7 +484,7 @@ function WorkspaceShell({
                 borderColor: "#F8F8F8",
               }}
             >
-              {nav.map((item) => {
+              {visibleNav(nav, workspace.runtime).map((item) => {
                 const active = section === item.id || (item.id === "apps" && utility);
                 return (
                   <Pressable
@@ -509,17 +546,19 @@ function WorkspaceShell({
                 ? detail.taskId
                 : detail.type === "file"
                   ? detail.file.id
-                  : detail.type === "browser"
-                    ? detail.browser.id
-                    : detail.type === "mail"
-                      ? detail.mail.id
-                      : detail.type === "review"
-                        ? detail.action.id
-                        : detail.type === "email"
-                          ? JSON.stringify(detail.draft)
-                          : detail.type === "event"
-                            ? detail.event?.id || "event-new"
-                            : detail.type
+                  : detail.type === "surface"
+                    ? detail.surface.id
+                    : detail.type === "browser"
+                      ? detail.browser.id
+                      : detail.type === "mail"
+                        ? detail.mail.id
+                        : detail.type === "review"
+                          ? detail.action.id
+                          : detail.type === "email"
+                            ? JSON.stringify(detail.draft)
+                            : detail.type === "event"
+                              ? detail.event?.id || "event-new"
+                              : detail.type
             }
             detail={detail}
           />
