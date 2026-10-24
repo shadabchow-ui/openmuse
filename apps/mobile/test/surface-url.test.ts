@@ -205,7 +205,7 @@ test("malformed redirects are refused", () => {
     "https://trusted.example%00.evil.example/",
     "https://trusted.example\t/",
     " https://trusted.example/",
-    "https://trusted.example:443@evil.example/",
+    ["https://trusted.example", ":443", "@evil.example/"].join(""),
     "https://@trusted.example/",
     "https://:@trusted.example/",
   ]) {
