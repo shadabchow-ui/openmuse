@@ -4,7 +4,7 @@ import type { NativeConfig } from "../src/native/config";
 import { readNativeConfig } from "../src/native/config";
 import { AuthError } from "../src/native/errors";
 import { createSessionManager } from "../src/native/session-manager";
-import { MemoryTokenStore, parseStoredSession, type StoredSession, type TokenStore } from "../src/native/token-store";
+import { MemoryTokenStore, parseStoredSession, type StoredSession, type TokenStore } from "../src/native/token-store-core";
 
 const cfg: NativeConfig = readNativeConfig(
   { EXPO_PUBLIC_API_URL: "https://gateway.example.test" },

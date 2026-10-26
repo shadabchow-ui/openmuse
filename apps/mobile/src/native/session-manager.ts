@@ -3,7 +3,7 @@
 import { parseTokenResponse } from "./auth-flow";
 import type { NativeConfig } from "./config";
 import { AuthError } from "./errors";
-import { parseStoredSession, type StoredSession, type TokenStore } from "./token-store";
+import { parseStoredSession, type StoredSession, type TokenStore } from "./token-store-core";
 
 export type SessionState =
   | { kind: "restoring" }
