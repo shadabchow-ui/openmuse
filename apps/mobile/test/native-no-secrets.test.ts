@@ -85,6 +85,6 @@ test("Diagnostics is unreachable from any production code path", () => {
     const window = lines.slice(Math.max(0, index - 12), index + 1).join("\n");
     assert.ok(window.includes("__DEV__"), `Diagnostics use at App.tsx:${index + 1} is not __DEV__-gated`);
   });
-  const diagnostics = readFileSync(join(mobileRoot, "src", "Diagnostics.tsx"), "utf8");
+  const diagnostics = readFileSync(join(mobileRoot, "src", "native", "Diagnostics.tsx"), "utf8");
   assert.ok(diagnostics.includes("if (!__DEV__) return null"), "Diagnostics must early-return outside __DEV__");
 });

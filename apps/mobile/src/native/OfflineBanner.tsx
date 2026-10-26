@@ -1,7 +1,7 @@
 /** Polite offline banner: shown when offline, hidden otherwise, never animated. */
 
 import { Text, View } from "react-native";
-import { colors } from "./ui";
+import { colors } from "../ui";
 
 export function OfflineBanner({ offline }: { offline: boolean }) {
   if (!offline) return null;

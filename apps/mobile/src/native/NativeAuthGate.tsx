@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, Linking, Platform, Text, View } from "react-native";
-import { deviceLabel, openSignIn } from "./native/browser-auth";
-import { readNativeConfig, type NativeConfig } from "./native/config";
-import { random, sha256 } from "./native/crypto";
-import { createPkce } from "./native/pkce";
-import { AuthError } from "./native/errors";
-import { buildAuthorizeUrl, exchangeCode, parseCallback } from "./native/auth-flow";
-import type { SessionManager } from "./native/session-manager";
-import { Button, Card, ErrorNotice, Mascot, colors, s } from "./ui";
+import { deviceLabel, openSignIn } from "./browser-auth";
+import { readNativeConfig, type NativeConfig } from "./config";
+import { random, sha256 } from "./crypto";
+import { createPkce } from "./pkce";
+import { AuthError } from "./errors";
+import { buildAuthorizeUrl, exchangeCode, parseCallback } from "./auth-flow";
+import type { SessionManager } from "./session-manager";
+import { Button, Card, ErrorNotice, Mascot, colors, s } from "../ui";
 
 const platform = Platform.OS === "ios" ? "ios" : "android";
 

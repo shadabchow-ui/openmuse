@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Text, View } from "react-native";
-import { authenticateBiometric } from "./native/biometric";
-import { Button, Card, ErrorNotice, colors, s } from "./ui";
+import { authenticateBiometric } from "./biometric";
+import { Button, Card, ErrorNotice, colors, s } from "../ui";
 
 export function BiometricLock({ onUnlocked, onSignOut }: { onUnlocked: () => void; onSignOut: () => void }) {
   const [failed, setFailed] = useState(false);

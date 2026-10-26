@@ -1,7 +1,7 @@
 /** In-app push prompt: permission is requested only when the person turns it on. */
 
 import { Text, View } from "react-native";
-import { Button, Card, s } from "./ui";
+import { Button, Card, s } from "../ui";
 
 export function PushPrompt({
   onTurnOn,

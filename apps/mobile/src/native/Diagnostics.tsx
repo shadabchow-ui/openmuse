@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Text, View } from "react-native";
-import { API_URL, apiPath, type MuseApi } from "./api";
-import { isLocalGatewayUrl, type NativeConfig } from "./native/config";
-import { nativeHeaders } from "./native/headers";
-import { Button, Card, ErrorNotice, s } from "./ui";
+import { API_URL, apiPath, type MuseApi } from "../api";
+import { isLocalGatewayUrl, type NativeConfig } from "./config";
+import { nativeHeaders } from "./headers";
+import { Button, Card, ErrorNotice, s } from "../ui";
 
 interface ProbeChunk {
   atMs: number;
