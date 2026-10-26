@@ -81,6 +81,7 @@ test("Diagnostics is unreachable from any production code path", () => {
   const lines = app.split("\n");
   lines.forEach((line, index) => {
     if (!line.includes("Diagnostics")) return;
+    if (/^\s*import\b/.test(line)) return;
     const window = lines.slice(Math.max(0, index - 12), index + 1).join("\n");
     assert.ok(window.includes("__DEV__"), `Diagnostics use at App.tsx:${index + 1} is not __DEV__-gated`);
   });

@@ -9,6 +9,7 @@ import {
   MessageCircle,
   PanelsTopLeft,
   Shapes,
+  Settings,
   SquareCheck,
   X,
 } from "lucide-react-native";
@@ -16,9 +17,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
+  Switch,
   Text,
   useWindowDimensions,
   View,
@@ -52,6 +55,30 @@ import { safeSignInTarget } from "./src/surface-url";
 import { ThreadsProvider, ThreadsSheet, useMuseThread } from "./src/threads";
 import { Button, Card, colors, ErrorNotice, Field, IconButton, Mascot, s } from "./src/ui";
 import { type Detail, useWorkspace, WorkspaceContext } from "./src/workspace";
+import { BiometricLock } from "./src/BiometricLock";
+import { Diagnostics } from "./src/Diagnostics";
+import { NativeAuthGate, nativeConfigFromEnv } from "./src/NativeAuthGate";
+import { OfflineBanner } from "./src/OfflineBanner";
+import { PushPrompt } from "./src/PushPrompt";
+import { setApiHooks } from "./src/api";
+import { biometricCapabilities } from "./src/native/biometric";
+import { shouldLock } from "./src/native/biometric-policy";
+import type { NativeConfig } from "./src/native/config";
+import { parseDeepLink, type Route } from "./src/native/deep-link";
+import { createForegroundTracker } from "./src/native/foreground";
+import { nativeHeaders } from "./src/native/headers";
+import { ensureFreshInstall } from "./src/native/install-guard";
+import { subscribeConnectivity } from "./src/native/network";
+import { addNotificationTapListener, registerForPush } from "./src/native/push";
+import { createSessionManager, type SessionManager } from "./src/native/session-manager";
+import {
+  readSecureSession,
+  writeSecureSession,
+  clearSecureSession,
+  readSecureString,
+  writeSecureString,
+} from "./src/native/token-store";
+import type { TokenStore } from "./src/native/token-store-core";
 
 const nav: { id: Section; label: string; icon: LucideIcon }[] = [
   { id: "chat", label: "Chat", icon: MessageCircle },
@@ -77,6 +104,19 @@ const titles: Partial<Record<Section, { title: string; subtitle: string }>> = {
   browser: { title: "Browser", subtitle: "Your connected browsing sessions." },
   files: { title: "Files", subtitle: "Documents, forms and filled copies." },
 };
+const nativeMode = process.env.EXPO_PUBLIC_AUTH_MODE === "native";
+const PUSH_SNOOZE_KEY = "muse.push.snooze.v1";
+const PUSH_SNOOZE_MS = 14 * 24 * 60 * 60 * 1000;
+const BIOMETRIC_KEY = "muse.biometric.v1";
+const APPROVAL_UNAVAILABLE =
+  "Approval hand-off isn't available in this app. Open Robot OS to decide.";
+
+const secureStore: TokenStore = {
+  read: readSecureSession,
+  write: writeSecureSession,
+  clear: clearSecureSession,
+};
+
 export default function App() {
   const [token, setToken] = useState("");
   const [accessKey, setAccessKey] = useState("");
@@ -101,6 +141,7 @@ export default function App() {
   useEffect(() => {
     void connect();
   }, [connect]);
+  if (nativeMode) return <NativeModeRoot />;
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
@@ -178,7 +219,17 @@ function ExternalSignIn({ url, retry }: { url: string | null; retry: () => void 
     </Card>
   );
 }
-function WorkspaceApp({ token }: { token: string }) {
+function WorkspaceApp({
+  token,
+  manager,
+  cfg,
+  onAuthCallbackUrl,
+}: {
+  token: string;
+  manager?: SessionManager;
+  cfg?: NativeConfig;
+  onAuthCallbackUrl?: (url: string) => void;
+}) {
   const api = useMemo(() => new MuseApi(token), [token]);
   const [workspace, setWorkspace] = useState<Workspace>();
   const [section, setSection] = useState<Section>("chat");
@@ -186,6 +237,16 @@ function WorkspaceApp({ token }: { token: string }) {
   const [toast, setToast] = useState("");
   const [error, setError] = useState("");
   const [prompt, setPrompt] = useState<{ id: number; text: string }>();
+  const [offline, setOffline] = useState(false);
+  const [reconnectEpoch, setReconnectEpoch] = useState(0);
+  const [locked, setLocked] = useState(false);
+  const [pushPrompt, setPushPrompt] = useState<"hidden" | "ask" | "busy">("hidden");
+  const [biometricOn, setBiometricOn] = useState(false);
+  const [pushStatus, setPushStatus] = useState("unknown");
+  const foreground = useRef(createForegroundTracker({ now: () => Date.now() }));
+  const awaySince = useRef<number | null>(null);
+  const biometricCaps = useRef({ enabled: false, hasHardware: false, enrolled: false });
+  const pushShown = useRef(false);
   const refresh = useCallback(async () => {
     const snapshot = await api.request<Workspace>("/api/workspace");
     setWorkspace(snapshot);
@@ -196,10 +257,27 @@ function WorkspaceApp({ token }: { token: string }) {
   }, [refresh]);
   useEffect(() => {
     const listener = AppState.addEventListener("change", (state) => {
-      if (state === "active") void refresh().catch((e) => setError(String(e)));
+      if (!nativeMode || !manager) {
+        if (state === "active") void refresh().catch((e) => setError(String(e)));
+        return;
+      }
+      if (state !== "active" && state !== "background" && state !== "inactive") return;
+      const decision = foreground.current.onChange(state);
+      if (state !== "active") {
+        if (awaySince.current === null) awaySince.current = Date.now();
+        return;
+      }
+      const awayMs = awaySince.current === null ? 0 : Date.now() - awaySince.current;
+      awaySince.current = null;
+      void (async () => {
+        if (decision.refresh) await refresh().catch((e) => setError(String(e)));
+        await manager.ensureFresh().catch(() => {});
+        if (decision.reconnect) setReconnectEpoch((n) => n + 1);
+        if (shouldLock({ ...biometricCaps.current, awayMs })) setLocked(true);
+      })();
     });
     return () => listener.remove();
-  }, [refresh]);
+  }, [refresh, manager]);
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(""), 5500);
@@ -215,6 +293,91 @@ function WorkspaceApp({ token }: { token: string }) {
   const ask = useCallback((text: string) => {
     setPrompt({ id: Date.now(), text });
     setSection("chat");
+  }, []);
+  useEffect(() => {
+    if (!nativeMode) return;
+    return subscribeConnectivity((event) => {
+      setOffline(event.isConnected === false || event.isInternetReachable === false);
+    });
+  }, []);
+  useEffect(() => {
+    if (!nativeMode) return;
+    void (async () => {
+      try {
+        const [caps, flag] = await Promise.all([
+          biometricCapabilities(),
+          readSecureString(BIOMETRIC_KEY),
+        ]);
+        biometricCaps.current = {
+          enabled: flag === "1",
+          hasHardware: caps.hasHardware,
+          enrolled: caps.enrolled,
+        };
+        setBiometricOn(flag === "1");
+      } catch {
+        /* the lock stays off */
+      }
+    })();
+  }, []);
+  useEffect(() => {
+    if (!nativeMode || !cfg) return;
+    const handleRoute = (route: Route) => {
+      if (route.kind === "task") open({ type: "task", taskId: route.taskId });
+      else if (route.kind === "chat") navigate("chat");
+      else if (route.kind === "approval") {
+        open({ type: "notifications" });
+        setToast(APPROVAL_UNAVAILABLE);
+      } else if (route.kind === "authCallback") onAuthCallbackUrl?.(route.url);
+      else open({ type: "notifications" });
+    };
+    const subscription = Linking.addEventListener("url", ({ url }) => {
+      const route = parseDeepLink(url, cfg);
+      if (route) handleRoute(route);
+    });
+    void Linking.getInitialURL().then((url) => {
+      if (!url) return;
+      const route = parseDeepLink(url, cfg);
+      if (route) handleRoute(route);
+    });
+    const stopPush = addNotificationTapListener(handleRoute);
+    return () => {
+      subscription.remove();
+      stopPush();
+    };
+  }, [cfg, navigate, onAuthCallbackUrl, open]);
+  useEffect(() => {
+    if (!nativeMode || !workspace || pushShown.current) return;
+    pushShown.current = true;
+    void readSecureString(PUSH_SNOOZE_KEY)
+      .then((snoozed) => {
+        const at = snoozed === null ? NaN : Number(snoozed);
+        if (!snoozed || !Number.isFinite(at) || Date.now() - at > PUSH_SNOOZE_MS) setPushPrompt("ask");
+      })
+      .catch(() => {});
+  }, [workspace]);
+  const turnOnPush = useCallback(async () => {
+    setPushPrompt("busy");
+    try {
+      const registration = await registerForPush();
+      setPushStatus(
+        registration.status === "registered" ? `registered:${registration.kind}` : registration.status,
+      );
+      if (registration.status === "registered") {
+        await api.request("/api/native/push-token", { kind: registration.kind, token: registration.token }, "POST");
+      }
+    } catch {
+      setPushStatus("unavailable");
+    }
+    setPushPrompt("hidden");
+  }, [api]);
+  const snoozePush = useCallback(async () => {
+    await writeSecureString(PUSH_SNOOZE_KEY, String(Date.now())).catch(() => {});
+    setPushPrompt("hidden");
+  }, []);
+  const toggleBiometric = useCallback(async (next: boolean) => {
+    setBiometricOn(next);
+    biometricCaps.current.enabled = next;
+    await writeSecureString(BIOMETRIC_KEY, next ? "1" : "0").catch(() => {});
   }, []);
   if (!workspace)
     return (
@@ -245,9 +408,11 @@ function WorkspaceApp({ token }: { token: string }) {
       </SafeAreaView>
     );
   return (
-    <WorkspaceContext.Provider
-      value={{ workspace, api, section, navigate, refresh, open, close, notify: setToast, ask }}
-    >
+    <>
+      {nativeMode ? <OfflineBanner offline={offline} /> : null}
+      <WorkspaceContext.Provider
+        value={{ workspace, api, section, navigate, refresh, open, close, notify: setToast, ask, offline }}
+      >
       <AgentWorkspaceProvider>
         <ComputerDraftProvider key={token}>
           <ThreadsProvider>
@@ -257,11 +422,30 @@ function WorkspaceApp({ token }: { token: string }) {
               clearToast={() => setToast("")}
               error={error}
               prompt={prompt}
+              reconnectEpoch={nativeMode ? reconnectEpoch : undefined}
             />
           </ThreadsProvider>
         </ComputerDraftProvider>
       </AgentWorkspaceProvider>
-    </WorkspaceContext.Provider>
+      </WorkspaceContext.Provider>
+      {nativeMode && manager && cfg ? (
+        <NativeSettingsPanel
+          manager={manager}
+          cfg={cfg}
+          api={api}
+          offline={offline}
+          pushStatus={pushStatus}
+          pushPrompt={pushPrompt}
+          onTurnOnPush={() => void turnOnPush()}
+          onSnoozePush={() => void snoozePush()}
+          biometricOn={biometricOn}
+          onToggleBiometric={(next: boolean) => void toggleBiometric(next)}
+          locked={locked}
+          onUnlocked={() => setLocked(false)}
+          onSignOut={() => void manager.signOut()}
+        />
+      ) : null}
+    </>
   );
 }
 function WorkspaceShell({
@@ -270,12 +454,14 @@ function WorkspaceShell({
   clearToast,
   error,
   prompt,
+  reconnectEpoch,
 }: {
   detail?: Detail;
   toast: string;
   clearToast: () => void;
   error: string;
   prompt?: { id: number; text: string };
+  reconnectEpoch?: number;
 }) {
   const { workspace, section, navigate, open } = useWorkspace();
   const { data } = useAgentWorkspace();
@@ -450,12 +636,13 @@ function WorkspaceShell({
                         thread={thread}
                         active={section === "chat" && selection.id === thread.id}
                         prompt={selection.id === thread.id ? prompt : undefined}
+                        reconnectEpoch={reconnectEpoch}
                       />
                     </View>
                   ))}
                 </>
               ) : (
-                <ChatScreen prompt={prompt} active={section === "chat"} />
+                <ChatScreen prompt={prompt} active={section === "chat"} reconnectEpoch={reconnectEpoch} />
               )}
             </View>
           </View>
@@ -564,6 +751,167 @@ function WorkspaceShell({
           />
         )}
       </SafeAreaView>
+    </>
+  );
+}
+
+/** Native-mode root and settings panel (IOM-12 Step 11). Only rendered when AUTH_MODE is native. */
+
+function NativeModeRoot() {
+  const cfg = useMemo(
+    () =>
+      nativeConfigFromEnv({
+        EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
+        EXPO_PUBLIC_API_PREFIX: process.env.EXPO_PUBLIC_API_PREFIX,
+        EXPO_PUBLIC_AUTH_MODE: process.env.EXPO_PUBLIC_AUTH_MODE,
+        EXPO_PUBLIC_APP_SCHEME: process.env.EXPO_PUBLIC_APP_SCHEME,
+        EXPO_PUBLIC_APP_VERSION: process.env.EXPO_PUBLIC_APP_VERSION,
+        EXPO_PUBLIC_STORE_URL: process.env.EXPO_PUBLIC_STORE_URL,
+      }),
+    [],
+  );
+  const devicePlatform = Platform.OS === "ios" ? "ios" : "android";
+  const manager = useMemo<SessionManager | null>(() => {
+    if (!cfg) return null;
+    return createSessionManager({ store: secureStore, cfg, platform: devicePlatform });
+  }, [cfg, devicePlatform]);
+  const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!manager) return;
+    void ensureFreshInstall(secureStore)
+      .catch(() => {})
+      .then(() => manager.restore())
+      .catch(() => {});
+  }, [manager]);
+  useEffect(() => {
+    if (!manager) return;
+    setApiHooks({
+      onUnauthorized: () => manager.onUnauthorized(),
+      onUnsupportedVersion: () => manager.onUnsupportedVersion(),
+    });
+    return () => setApiHooks({});
+  }, [manager]);
+  if (!cfg || !manager) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <SafeAreaView
+          style={{
+            flex: 1,
+            backgroundColor: colors.canvas,
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+          }}
+        >
+          <Card style={{ width: "100%", maxWidth: 420 }}>
+            <Text style={s.text}>Sign-in is not configured.</Text>
+          </Card>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
+  return (
+    <SafeAreaProvider>
+      <StatusBar style="dark" />
+      <NativeAuthGate
+        manager={manager}
+        cfg={cfg}
+        callbackUrl={callbackUrl}
+        onCallbackConsumed={() => setCallbackUrl(null)}
+      >
+        {(token) => (
+          <CopilotKitProvider
+            runtimeUrl={`${API_URL}${apiPath("/api/copilotkit")}`}
+            headers={{
+              Authorization: `Bearer ${token}`,
+              ...nativeHeaders({ apiVersion: 1, appVersion: cfg.appVersion }, devicePlatform),
+            }}
+          >
+            <WorkspaceApp token={token} manager={manager} cfg={cfg} onAuthCallbackUrl={setCallbackUrl} />
+          </CopilotKitProvider>
+        )}
+      </NativeAuthGate>
+    </SafeAreaProvider>
+  );
+}
+
+function NativeSettingsPanel({
+  manager,
+  cfg,
+  api,
+  offline,
+  pushStatus,
+  pushPrompt,
+  onTurnOnPush,
+  onSnoozePush,
+  biometricOn,
+  onToggleBiometric,
+  locked,
+  onUnlocked,
+  onSignOut,
+}: {
+  manager: SessionManager;
+  cfg: NativeConfig;
+  api: MuseApi;
+  offline: boolean;
+  pushStatus: string;
+  pushPrompt: "hidden" | "ask" | "busy";
+  onTurnOnPush: () => void;
+  onSnoozePush: () => void;
+  biometricOn: boolean;
+  onToggleBiometric: (next: boolean) => void;
+  locked: boolean;
+  onUnlocked: () => void;
+  onSignOut: () => void;
+}) {
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [renderState, setRenderState] = useState(() => manager.state());
+  useEffect(() => manager.subscribe(() => setRenderState(manager.state())), [manager]);
+  const session =
+    renderState.kind === "signedIn"
+      ? { publicId: renderState.publicId, expiresAtMs: renderState.expiresAtMs }
+      : null;
+  return (
+    <>
+      <View style={{ position: "absolute", right: 16, top: 64 }}>
+        <IconButton icon={Settings} label="Native settings" onPress={() => setPanelOpen((v) => !v)} />
+      </View>
+      {panelOpen ? (
+        <View style={{ position: "absolute", top: 116, left: 20, right: 20 }}>
+          <Card>
+            <Text style={s.text}>Native settings</Text>
+            <View style={[s.row, { justifyContent: "space-between", alignItems: "center" }]}>
+              <Text style={s.text}>Lock with Face ID / fingerprint</Text>
+              <Switch
+                value={biometricOn}
+                onValueChange={onToggleBiometric}
+                accessibilityLabel="Lock with Face ID / fingerprint"
+              />
+            </View>
+            {__DEV__ ? (
+              <Diagnostics
+                cfg={cfg}
+                api={api}
+                platform={Platform.OS === "ios" ? "ios" : "android"}
+                session={session}
+                offline={offline}
+                pushStatus={pushStatus}
+              />
+            ) : null}
+          </Card>
+        </View>
+      ) : null}
+      {pushPrompt !== "hidden" ? (
+        <View style={{ position: "absolute", left: 0, right: 0, bottom: 90 }}>
+          <PushPrompt onTurnOn={onTurnOnPush} onNotNow={onSnoozePush} busy={pushPrompt === "busy"} />
+        </View>
+      ) : null}
+      {locked ? (
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+          <BiometricLock onUnlocked={onUnlocked} onSignOut={onSignOut} />
+        </View>
+      ) : null}
     </>
   );
 }

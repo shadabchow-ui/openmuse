@@ -214,12 +214,14 @@ export function ChatScreen({
   prompt,
   thread,
   active = true,
+  reconnectEpoch,
 }: {
   prompt?: { id: number; text: string };
   thread?: Selection;
   active?: boolean;
+  reconnectEpoch?: number;
 }) {
-  const { api, workspace: w, refresh, navigate } = useWorkspace();
+  const { api, workspace: w, refresh, navigate, offline } = useWorkspace();
   const { data: agentWorkspace, refresh: refreshAgent } = useAgentWorkspace();
   const { enabled: richThreads, mainId, claimPrompt } = useMuseThread();
   const selection = thread || { id: "local", existing: false };
@@ -324,6 +326,9 @@ export function ChatScreen({
       if (richThreads) void agent.detachActiveRun().catch(() => {});
     };
   }, [agent, agentId, api, copilotkit, isReady, historyAttempt, richThreads, selection.existing]);
+  useEffect(() => {
+    if (reconnectEpoch) setHistoryAttempt((n) => n + 1);
+  }, [reconnectEpoch]);
   const saveHistory = useCallback(async () => {
     if (!richThreads) await api.request("/api/conversation", { messages: agent.messages }, "PUT");
     setSaveError("");
@@ -971,7 +976,8 @@ export function ChatScreen({
                   ? (event) => {
                       if (
                         event.nativeEvent.key === "Enter" &&
-                        !("shiftKey" in event.nativeEvent && event.nativeEvent.shiftKey)
+                        !("shiftKey" in event.nativeEvent && event.nativeEvent.shiftKey) &&
+                        !offline
                       ) {
                         event.preventDefault();
                         send();
@@ -983,7 +989,7 @@ export function ChatScreen({
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={replying ? "Stop reply" : "Send message"}
-              disabled={!replying && (!draft.trim() || !loaded || !isReady)}
+              disabled={!replying && (!draft.trim() || !loaded || !isReady || offline)}
               onPress={replying ? () => void stop() : send}
               style={({ pressed }) => ({
                 width: 44,

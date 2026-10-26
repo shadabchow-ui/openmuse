@@ -7,6 +7,8 @@ import {
   openSession,
   sendRequest,
 } from "./api-config";
+import { ApiError } from "./api-response";
+import { nativeHeaders } from "./native/headers";
 
 export { apiConfig, apiPath, ExternalAuthRequired };
 
@@ -22,18 +24,55 @@ export const API_URL = makeApiConfig(
   Platform.OS === "android",
 ).apiUrl;
 
+const AUTH_MODE = process.env.EXPO_PUBLIC_AUTH_MODE;
+const APP_VERSION = process.env.EXPO_PUBLIC_APP_VERSION ?? "0.0.0";
+
+export interface ApiHooks {
+  onUnauthorized?: () => void | Promise<void>;
+  onUnsupportedVersion?: () => void;
+}
+
+let apiHooks: ApiHooks = {};
+
+/** Native-mode hooks for 401/426. Unset hooks are no-ops, so other modes are unchanged. */
+export function setApiHooks(next: ApiHooks): void {
+  apiHooks = next;
+}
+
+function nativeFetch(input: string, init?: RequestInit): Promise<Response> {
+  const platform = Platform.OS === "ios" ? "ios" : "android";
+  return fetch(input, {
+    ...init,
+    headers: {
+      ...((init?.headers as Record<string, string> | undefined) ?? {}),
+      ...nativeHeaders({ apiVersion: 1, appVersion: APP_VERSION }, platform),
+    },
+  });
+}
+
+const passthroughFetch = (input: string, init?: RequestInit): Promise<Response> => fetch(input, init);
+
 export class MuseApi {
   constructor(readonly token: string) {}
   async request<T>(path: string, body?: unknown, method?: string): Promise<T> {
-    return sendRequest<T>(
-      apiConfig,
-      API_URL,
-      (input, init) => fetch(input, init),
-      this.token,
-      path,
-      body,
-      method,
-    );
+    const native = AUTH_MODE === "native";
+    try {
+      return await sendRequest<T>(
+        apiConfig,
+        API_URL,
+        native ? nativeFetch : passthroughFetch,
+        this.token,
+        path,
+        body,
+        method,
+      );
+    } catch (error) {
+      if (native && error instanceof ApiError) {
+        if (error.status === 401) await apiHooks.onUnauthorized?.();
+        else if (error.status === 426) apiHooks.onUnsupportedVersion?.();
+      }
+      throw error;
+    }
   }
   url(path: string) {
     return path.startsWith("http") ? path : `${API_URL}${apiPath(path)}`;
