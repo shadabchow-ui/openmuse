@@ -17,7 +17,7 @@ export function PushPrompt({
       <Card>
         <Text style={s.text}>Get a heads-up when your robot needs you</Text>
         <Text style={s.muted}>Turn on notifications to hear about approvals and finished work.</Text>
-        <Button primary onPress={onTurnOn} busy={busy}>
+        <Button primary onPress={onTurnOn} busy={busy} disabled={busy}>
           Turn on
         </Button>
         <Button onPress={onNotNow}>Not now</Button>
