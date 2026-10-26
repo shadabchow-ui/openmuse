@@ -86,6 +86,8 @@ test("access_denied with matching state parses to denied", () => {
 for (const [name, url] of [
   ["wrong prefix", `https://evil.example.test/?code=${SECRET_CODE}&state=${STATE}`],
   ["wrong state", `${cfg.redirectUri}?code=${SECRET_CODE}&state=other-state-value-0000000000`],
+  ["wrong state, different length", `${cfg.redirectUri}?code=${SECRET_CODE}&state=${STATE}x`],
+  ["wrong state, too short", `${cfg.redirectUri}?code=${SECRET_CODE}&state=short`],
   ["missing state", `${cfg.redirectUri}?code=${SECRET_CODE}`],
   ["short code", `${cfg.redirectUri}?code=short&state=${STATE}`],
   ["bad alphabet", `${cfg.redirectUri}?code=${"!".repeat(24)}&state=${STATE}`],
