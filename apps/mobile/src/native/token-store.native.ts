@@ -20,6 +20,19 @@ export async function writeSecureSession(session: StoredSession): Promise<void> 
   await SecureStore.setItemAsync(KEY, JSON.stringify(session), OPTIONS);
 }
 
+/** Small non-secret preferences (biometric flag, push snooze). Same store, same policy. */
+export async function readSecureString(key: string): Promise<string | null> {
+  try {
+    return await SecureStore.getItemAsync(key, OPTIONS);
+  } catch {
+    return null;
+  }
+}
+
+export async function writeSecureString(key: string, value: string): Promise<void> {
+  await SecureStore.setItemAsync(key, value, OPTIONS);
+}
+
 export async function clearSecureSession(): Promise<void> {
   try {
     await SecureStore.deleteItemAsync(KEY, OPTIONS);

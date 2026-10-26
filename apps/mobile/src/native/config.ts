@@ -17,6 +17,15 @@ export interface NativeConfig {
 const SCHEME_RE = /^[a-z][a-z0-9+.-]{1,31}$/;
 const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 
+/** True when the URL names a local development host (any protocol). */
+export function isLocalGatewayUrl(apiUrl: string): boolean {
+  try {
+    return isLocalHostname(new URL(apiUrl).hostname);
+  } catch {
+    return false;
+  }
+}
+
 function isLocalHostname(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
   if (host === "localhost" || host === "127.0.0.1" || host === "10.0.2.2") return true;

@@ -1,6 +1,16 @@
 /** System-browser sign-in: never a WebView, never a password field in the app. */
 
+import { modelName } from "expo-device";
 import * as WebBrowser from "expo-web-browser";
+
+/** Best-effort device label for the authorize URL; never a secret. */
+export async function deviceLabel(): Promise<string> {
+  try {
+    return modelName ?? "Phone";
+  } catch {
+    return "Phone";
+  }
+}
 
 WebBrowser.maybeCompleteAuthSession();
 
