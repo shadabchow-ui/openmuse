@@ -43,7 +43,7 @@ import { PlanCard } from "./plan-card";
 import { SearchToolCard } from "./search-tool-card";
 import { FileThreadCard, TaskThreadCard } from "./thread-artifacts";
 import { type Selection, useMuseThread } from "./threads";
-import { Button, Card, CheckRow, ErrorNotice, useTheme, makeStyles } from "./ui";
+import { Button, Card, CheckRow, ErrorNotice, makeStyles, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 const displayParameters = z.record(z.string(), z.unknown());

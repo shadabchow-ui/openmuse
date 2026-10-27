@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, AppState, Image, Text, View } from "react-native";
 import { z } from "zod";
 import type { BrowserSession } from "../../../packages/domain/src";
-import { Button, Card, ErrorNotice, useTheme, makeStyles } from "./ui";
+import { Button, Card, ErrorNotice, makeStyles, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 export const BrowserRunContext = createContext({ running: false, active: false });

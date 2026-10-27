@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Text, View } from "react-native";
-import { Button, Card, useTheme, makeStyles } from "../ui";
+import { Button, Card, makeStyles, useTheme } from "../ui";
 
 export function PushPrompt({
   onTurnOn,

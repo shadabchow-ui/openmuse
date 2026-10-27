@@ -4,7 +4,7 @@
 // apps/mobile/src/** except the theme dir (generated tokens, artwork and
 // the deprecated alias live there) and functional values (transparent,
 // currentcolor). Exit codes: 0 clean, 1 hit.
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -37,9 +37,8 @@ function scanFile(path) {
       hits.push(`${path}:${i + 1}: colour function ${f[0].trim()}`);
       return;
     }
-    let w;
     WORD_RE.lastIndex = 0;
-    while ((w = WORD_RE.exec(line)) !== null) {
+    for (let w = WORD_RE.exec(line); w !== null; w = WORD_RE.exec(line)) {
       if (NAMED.has(w[1].toLowerCase())) {
         hits.push(`${path}:${i + 1}: named colour ${w[1]}`);
         break;
@@ -57,7 +56,9 @@ function walk(dir) {
       const rel = relative(SRC, p).split(sep)[0];
       if (!SKIP_DIRS.includes(rel)) walk(p);
     } else if (/\.(tsx?|jsx?|css)$/.test(e)) {
-      hits.push(...scanFile(p).map((h) => relative(root, p).split(sep).join("/") + h.slice(h.indexOf(":"))));
+      hits.push(
+        ...scanFile(p).map((h) => relative(root, p).split(sep).join("/") + h.slice(h.indexOf(":"))),
+      );
     }
   }
 }
@@ -65,7 +66,7 @@ function walk(dir) {
 walk(SRC);
 if (hits.length) {
   console.log(`${hits.length} literal colour(s) outside apps/mobile/src/theme/:`);
-  for (const h of hits.slice(0, 30)) console.log("  " + h);
+  for (const h of hits.slice(0, 30)) console.log(`  ${h}`);
   process.exit(1);
 }
 console.log("check-theme-literals: clean");

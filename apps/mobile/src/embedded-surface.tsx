@@ -5,7 +5,7 @@ import { apiConfig } from "./api-config";
 import { EmbedFrame } from "./embed-frame";
 import { newEmbedNonce } from "./embed-messages";
 import { safeSurfacePath, surfaceMode } from "./surface-url";
-import { Button, useTheme, makeStyles } from "./ui";
+import { Button, makeStyles, useTheme } from "./ui";
 
 /**
  * A backend view. Only a `presence` view on a configured path prefix is framed (default: none), in a sandbox

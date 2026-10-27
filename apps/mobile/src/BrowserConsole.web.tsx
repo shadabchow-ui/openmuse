@@ -1,5 +1,4 @@
-import { useMemo } from "react";
-import { makeStyles, useTheme } from "./ui";
+import { useTheme } from "./ui";
 export default function BrowserConsole({
   url,
   title = "Remote browser session console",
@@ -10,7 +9,6 @@ export default function BrowserConsole({
   sandboxed?: boolean;
 }) {
   const theme = useTheme();
-  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <iframe
       title={title}

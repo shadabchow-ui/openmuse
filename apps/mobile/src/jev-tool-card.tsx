@@ -8,7 +8,7 @@ import {
   retryChoiceAvailable,
   selectionText,
 } from "./jev-actions";
-import { Button, Card, ErrorNotice, useTheme, makeStyles } from "./ui";
+import { Button, Card, ErrorNotice, makeStyles, useTheme } from "./ui";
 
 type JevInteraction = {
   threadId: string | null;

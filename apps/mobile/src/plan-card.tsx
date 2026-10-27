@@ -2,7 +2,7 @@ import { useRef, useState, useMemo } from "react";
 import { Text, View } from "react-native";
 import { startPlanResponseSchema } from "../../../packages/domain/src/muse-contract";
 import { parseProposal } from "./plan-proposal";
-import { Button, Card, ErrorNotice, useTheme, makeStyles } from "./ui";
+import { Button, Card, ErrorNotice, makeStyles, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 /**

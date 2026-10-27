@@ -41,7 +41,7 @@ import type {
 import { API_URL, apiPath } from "./api";
 import { browserAddress } from "./browser-address";
 import { localDateTime, startOfZonedDay, zonedInstant } from "./date-time";
-import { Button, Card, Chip, dateLabel, Empty, ErrorNotice, IconButton, LinkRow, Mascot, relativeDate, resultSummary, SectionHeading, Sheet, timeLabel, useTheme, makeStyles } from "./ui";
+import { Button, Card, Chip, dateLabel, Empty, ErrorNotice, IconButton, LinkRow, Mascot, relativeDate, resultSummary, SectionHeading, Sheet, timeLabel, makeStyles, useTheme } from "./ui";
 import { connectionBrands } from "./theme/artwork";
 import { useWorkspace } from "./workspace";
 

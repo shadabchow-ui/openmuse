@@ -42,7 +42,7 @@ import DateTimeEditor from "./DateTimeEditor";
 import { localDateTime, zonedInstant } from "./date-time";
 import { EmbeddedSurface } from "./embedded-surface";
 import PdfReader from "./PdfReader";
-import { Button, Card, CheckRow, Chip, dateLabel, Empty, ErrorNotice, Field, LinkRow, resultSummary, SectionHeading, Sheet, timeLabel, useTheme, makeStyles } from "./ui";
+import { Button, Card, CheckRow, Chip, dateLabel, Empty, ErrorNotice, Field, LinkRow, resultSummary, SectionHeading, Sheet, timeLabel, makeStyles, useTheme } from "./ui";
 import { type Detail, useWorkspace } from "./workspace";
 export function Details({ detail }: { detail: Detail }) {
   const theme = useTheme();

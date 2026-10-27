@@ -36,7 +36,7 @@ import type {
 import { useAgentWorkspace } from "./agent-workspace";
 import { capabilityOf } from "./capabilities";
 import { ActivityScreen, ConnectionsScreen } from "./screens";
-import { Button, Card, CheckRow, Chip, Empty, ErrorNotice, Field, LinkRow, Mascot, resultSummary, SectionHeading, Sheet, useTheme, makeStyles } from "./ui";
+import { Button, Card, CheckRow, Chip, Empty, ErrorNotice, Field, LinkRow, Mascot, resultSummary, SectionHeading, Sheet, makeStyles, useTheme } from "./ui";
 import { financeArtwork } from "./theme/artwork";
 import { useWorkspace } from "./workspace";
 

@@ -12,7 +12,7 @@ import {
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState, useMemo } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { capabilityOf } from "./capabilities";
-import { Button, ErrorNotice, Field, LinkRow, Sheet, useTheme, makeStyles } from "./ui";
+import { Button, ErrorNotice, Field, LinkRow, Sheet, makeStyles, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 function newThreadId() {

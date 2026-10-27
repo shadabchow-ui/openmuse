@@ -9,7 +9,7 @@ import { createPkce } from "./pkce";
 import { AuthError } from "./errors";
 import { buildAuthorizeUrl, exchangeCode, parseCallback } from "./auth-flow";
 import type { SessionManager } from "./session-manager";
-import { Button, Card, ErrorNotice, Mascot, useTheme, makeStyles } from "../ui";
+import { Button, Card, ErrorNotice, Mascot, makeStyles, useTheme } from "../ui";
 
 const platform = Platform.OS === "ios" ? "ios" : "android";
 

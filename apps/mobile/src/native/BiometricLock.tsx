@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Text, View } from "react-native";
 import { authenticateBiometric } from "./biometric";
-import { Button, Card, ErrorNotice, useTheme, makeStyles } from "../ui";
+import { Button, Card, ErrorNotice, makeStyles, useTheme } from "../ui";
 
 export function BiometricLock({ onUnlocked, onSignOut }: { onUnlocked: () => void; onSignOut: () => void }) {
   const theme = useTheme();

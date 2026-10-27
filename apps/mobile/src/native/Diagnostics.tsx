@@ -5,7 +5,7 @@ import { Text, View } from "react-native";
 import { API_URL, apiPath, type MuseApi } from "../api";
 import { isLocalGatewayUrl, type NativeConfig } from "./config";
 import { nativeHeaders } from "./headers";
-import { Button, Card, ErrorNotice, useTheme, makeStyles } from "../ui";
+import { Button, Card, ErrorNotice, makeStyles, useTheme } from "../ui";
 
 interface ProbeChunk {
   atMs: number;

@@ -185,21 +185,21 @@ function convertFile(rel, text) {
     let line = out[i];
     line = line.replace(/\bcolors\.([A-Za-z]+)/g, (m, k) => {
       if (!(k in COLOR_MAP)) {
-        manual.push(rel + ":" + (i + 1) + ": unknown colors key " + k);
+        manual.push(`${rel}:${i + 1}: unknown colors key ${k}`);
         return m;
       }
       if (manualLine(rel, orig)) return m;
       changed.colors++;
-      return "theme." + COLOR_MAP[k];
+      return `theme.${COLOR_MAP[k]}`;
     });
     out[i] = line.replace(/#[0-9A-Fa-f]{3,8}\b/g, (m) => {
       const role = LITERAL_MAP[m.toLowerCase()];
       if (!role) {
-        manual.push(rel + ":" + (i + 1) + ": unmapped literal " + m);
+        manual.push(`${rel}:${i + 1}: unmapped literal ${m}`);
         return m;
       }
       changed.literals++;
-      return "theme." + role;
+      return `theme.${role}`;
     });
   }
 
@@ -219,7 +219,7 @@ function convertFile(rel, text) {
   for (const u of usageLines) {
     const d = depthAt(u);
     if (d === 0) {
-      manual.push(rel + ":" + (u + 1) + ": module-scope theme/styles use");
+      manual.push(`${rel}:${u + 1}: module-scope theme/styles use`);
       continue;
     }
     let host = -1;
@@ -230,7 +230,7 @@ function convertFile(rel, text) {
       }
     }
     if (host === -1) {
-      manual.push(rel + ":" + (u + 1) + ": no enclosing function found");
+      manual.push(`${rel}:${u + 1}: no enclosing function found`);
       continue;
     }
     if (!hostFns.has(host)) hostFns.set(host, []);
@@ -243,7 +243,8 @@ function convertFile(rel, text) {
     const nm = body.match(/function\s+([A-Za-z_$][\w$]*)|const\s+([A-Za-z_$][\w$]*)\s*=/) || [];
     const name = nm[1] || nm[2] || "anonymous";
     if (!/^[A-Z]/.test(name)) {
-      for (const u of hostFns.get(h)) manual.push(rel + ":" + (u + 1) + ": use inside non-component " + name);
+      for (const u of hostFns.get(h))
+        manual.push(`${rel}:${u + 1}: use inside non-component ${name}`);
       continue;
     }
     const base = depthAt(h);
@@ -256,23 +257,26 @@ function convertFile(rel, text) {
       }
     }
     if (open === -1) {
-      manual.push(rel + ":" + (h + 1) + ": cannot find body of " + name);
+      manual.push(`${rel}:${h + 1}: cannot find body of ${name}`);
       continue;
     }
-    const indent = (out[open].match(/^\s*/) || [""])[0] + "  ";
+    const indent = `${(out[open].match(/^\s*/) || [""])[0]}  `;
     const insert = [];
-    if (!/const\s+theme\s*=\s*useTheme\(\)/.test(body)) insert.push(indent + "const theme = useTheme();");
+    if (!/const\s+theme\s*=\s*useTheme\(\)/.test(body))
+      insert.push(`${indent}const theme = useTheme();`);
     if (needsStyles && !/makeStyles\(theme\)/.test(body))
-      insert.push(indent + "const s = useMemo(() => makeStyles(theme), [theme]);");
+      insert.push(`${indent}const s = useMemo(() => makeStyles(theme), [theme]);`);
     if (insert.length) {
       out.splice(open + 1, 0, ...insert);
-      changed.hooks.push(name + ":" + (open + 2));
+      changed.hooks.push(`${name}:${open + 2}`);
     }
   }
 
   const uiPrefix = rel.includes("/native/") ? "../ui" : "./ui";
   let text2 = out.join("\n");
-  const uiImport = new RegExp("import\\s*\\{([^}]*)\\}\\s*from\\s*[\"']" + uiPrefix.replace(/\//g, "\\/") + "[\"'];?");
+  const uiImport = new RegExp(
+    `import\\s*\\{([^}]*)\\}\\s*from\\s*["']${uiPrefix.replace(/\//g, "\\/")}["'];?`,
+  );
   const m = text2.match(uiImport);
   if (m) {
     let names = m[1]
@@ -284,7 +288,7 @@ function convertFile(rel, text) {
       if (!names.includes("useTheme")) names.push("useTheme");
       if (needsStyles && !names.includes("makeStyles")) names.push("makeStyles");
     }
-    text2 = text2.replace(uiImport, 'import { ' + names.join(", ") + ' } from "' + uiPrefix + '";');
+    text2 = text2.replace(uiImport, `import { ${names.join(", ")} } from "${uiPrefix}";`);
   }
   // Unquote stringified role refs produced when a literal sat inside quotes.
   // JSX prop position (prop="lit") needs braces; style-object position needs
@@ -293,13 +297,13 @@ function convertFile(rel, text) {
   text2 = text2.replace(/(["'])theme\.([A-Za-z]+)\1/g, "theme.$2");
   const reactLine = text2.split("\n").find((l) => /from\s*["']react["']/.test(l)) || "";
   if (needsStyles && !/useMemo/.test(reactLine)) {
-    text2 = text2.replace(/import\s*\{([^}]*)\}\s*from\s*["']react["'];?/, (mm, nn) => {
+    text2 = text2.replace(/import\s*\{([^}]*)\}\s*from\s*["']react["'];?/, (_mm, nn) => {
       const ns = nn
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
       if (!ns.includes("useMemo")) ns.push("useMemo");
-      return 'import { ' + ns.join(", ") + ' } from "react";';
+      return `import { ${ns.join(", ")} } from "react";`;
     });
   }
   return { changed: true, text: text2, manual, stats: changed };
@@ -310,7 +314,7 @@ function walk(dir) {
   for (const e of readdirSync(dir)) {
     const p = join(dir, e);
     if (statSync(p).isDirectory()) {
-      const rel = relative(root, p).split(sep).join("/") + "/";
+      const rel = `${relative(root, p).split(sep).join("/")}/`;
       if (!SKIP_DIRS.some((d) => rel === d || rel.startsWith(d))) walk(p);
     } else if (/\.(tsx?|jsx?)$/.test(e)) {
       const rel = relative(root, p).split(sep).join("/");
@@ -331,10 +335,12 @@ for (const p of files.sort()) {
   if (r.changed && r.text && r.text !== text) {
     writeFileSync(p, r.text);
     converted++;
-    console.log("CONVERTED " + rel + " colors=" + r.stats.colors + " literals=" + r.stats.literals + " hooks=[" + r.stats.hooks.join(", ") + "]");
+    console.log(
+      `CONVERTED ${rel} colors=${r.stats.colors} literals=${r.stats.literals} hooks=[${r.stats.hooks.join(", ")}]`,
+    );
   }
 }
 console.log("");
-console.log("files converted: " + converted);
+console.log(`files converted: ${converted}`);
 console.log("MANUAL items:");
-for (const x of allManual) console.log("  " + x);
+for (const x of allManual) console.log(`  ${x}`);

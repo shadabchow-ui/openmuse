@@ -3,7 +3,7 @@ import { useContext, useMemo } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { z } from "zod";
 import { BrowserRunContext } from "./browser-tool-card";
-import { Button, Card, ErrorNotice, useTheme, makeStyles } from "./ui";
+import { Button, Card, ErrorNotice, makeStyles, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 const messageSchema = z.object({

@@ -3,7 +3,7 @@ import { useContext, useState, useMemo } from "react";
 import { ActivityIndicator, Linking, Text, View } from "react-native";
 import { z } from "zod";
 import { BrowserRunContext } from "./browser-tool-card";
-import { Card, ErrorNotice, useTheme, makeStyles } from "./ui";
+import { Card, ErrorNotice, makeStyles, useTheme } from "./ui";
 
 const resultSchema = z.object({
   results: z.array(z.object({ url: z.url({ protocol: /^https?$/ }), title: z.string().nullish() })),

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Text, View } from "react-native";
-import { useTheme, makeStyles } from "./ui";
+import { makeStyles, useTheme } from "./ui";
 
 interface DateFieldsProps {
   label: string;

@@ -9,28 +9,31 @@
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { renderToString } from "react-dom/server";
 import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 import { dark as tokenDark } from "../src/theme/generated/open-muse";
 import { colors } from "../src/theme/legacy-colors";
-import { darkTheme, lightTheme, resolveTheme } from "../src/theme/theme";
 import { ThemeProvider, useTheme } from "../src/theme/ThemeProvider";
+import { darkTheme, lightTheme, resolveTheme } from "../src/theme/theme";
 
 test("deprecated alias equals the pre-change palette", () => {
-  assert.deepEqual({ ...colors }, {
-    canvas: "#FCFCFC",
-    card: "#FFFFFF",
-    text: "#11191C",
-    muted: "#697176",
-    line: "#EEEEF0",
-    blue: "#C8E7FF",
-    blueDark: "#1473C8",
-    sky: "#EDF7FD",
-    green: "#E3F3E8",
-    lavender: "#F0EEFA",
-    orange: "#FDF0DF",
-    danger: "#AA4A45",
-  });
+  assert.deepEqual(
+    { ...colors },
+    {
+      canvas: "#FCFCFC",
+      card: "#FFFFFF",
+      text: "#11191C",
+      muted: "#697176",
+      line: "#EEEEF0",
+      blue: "#C8E7FF",
+      blueDark: "#1473C8",
+      sky: "#EDF7FD",
+      green: "#E3F3E8",
+      lavender: "#F0EEFA",
+      orange: "#FDF0DF",
+      danger: "#AA4A45",
+    },
+  );
 });
 
 test("light theme preserves the fork palette byte-identically", () => {
@@ -66,7 +69,12 @@ test("dark theme carries the generated token values", () => {
 });
 
 test("on-wash light values preserve the old card text", () => {
-  for (const role of [lightTheme.onSuccess, lightTheme.onWarning, lightTheme.onInfo, lightTheme.onAccent] as const) {
+  for (const role of [
+    lightTheme.onSuccess,
+    lightTheme.onWarning,
+    lightTheme.onInfo,
+    lightTheme.onAccent,
+  ] as const) {
     assert.equal(role, "#11191C");
   }
   assert.equal(lightTheme.successText, "#248258");
@@ -91,6 +99,7 @@ test("useTheme defaults to light with no provider mounted", () => {
 
 test("provider resolves an explicit dark choice", () => {
   const html = renderToString(
+    // biome-ignore lint/correctness/noChildrenProp: node:test .ts file cannot use JSX; children-in-props is the only render path here.
     createElement(ThemeProvider, { initialChoice: "dark", children: createElement(Probe) }),
   );
   assert.ok(html.includes(`dark:dark:${tokenDark.background}:${tokenDark.foreground}`), html);
@@ -98,6 +107,7 @@ test("provider resolves an explicit dark choice", () => {
 
 test("provider resolves an explicit light choice", () => {
   const html = renderToString(
+    // biome-ignore lint/correctness/noChildrenProp: node:test .ts file cannot use JSX; children-in-props is the only render path here.
     createElement(ThemeProvider, { initialChoice: "light", children: createElement(Probe) }),
   );
   assert.ok(html.includes(`light:light:${lightTheme.background}:${lightTheme.foreground}`), html);
