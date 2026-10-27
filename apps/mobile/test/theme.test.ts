@@ -112,3 +112,11 @@ test("provider resolves an explicit light choice", () => {
   );
   assert.ok(html.includes(`light:light:${lightTheme.background}:${lightTheme.foreground}`), html);
 });
+
+// Preserve the exact legacy alert appearance while mapping dark to existing tokens.
+test("error notice preserves light pixels and pairs existing dark tokens", () => {
+  assert.equal(lightTheme.errorBackground, "#FBEFED");
+  assert.equal(lightTheme.errorForeground, "#AA4A45");
+  assert.equal(darkTheme.errorBackground, tokenDark.destructive);
+  assert.equal(darkTheme.errorForeground, tokenDark["destructive-foreground"]);
+});

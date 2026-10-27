@@ -26,6 +26,8 @@ export interface ThemeRoles {
   accentForeground: string;
   destructive: string;
   destructiveForeground: string;
+  errorBackground: string;
+  errorForeground: string;
   success: string;
   successForeground: string;
   warning: string;
@@ -78,6 +80,9 @@ export const lightTheme: ThemeRoles = {
   accentForeground: TEXT,
   destructive: "#AA4A45", // old danger key
   destructiveForeground: PAPER,
+  errorBackground: "#FBEFED", // existing light error wash, preserved byte-for-byte
+  errorForeground: "#AA4A45", // existing light error text
+
   success: "#E3F3E8", // old green key
   successForeground: "#1d7f53", // token light.success
   warning: "#FDF0DF", // old orange key
@@ -113,6 +118,8 @@ export const darkTheme: ThemeRoles = {
   accentForeground: tokenDark["accent-foreground"],
   destructive: tokenDark.destructive,
   destructiveForeground: tokenDark["destructive-foreground"],
+  errorBackground: tokenDark.destructive,
+  errorForeground: tokenDark["destructive-foreground"],
   success: tokenDark.success,
   successForeground: tokenDark["success-foreground"],
   warning: tokenDark.warning,

@@ -105,7 +105,7 @@ export function makeStyles(theme: ThemeRoles) {
     error: {
       padding: 16,
       borderRadius: 14,
-      backgroundColor: theme.destructive,
+      backgroundColor: theme.errorBackground,
       marginVertical: 10,
       gap: 4,
     },
@@ -273,7 +273,7 @@ export function ErrorNotice({ error }: { error?: string }) {
   const s = useMemo(() => makeStyles(theme), [theme]);
   return error ? (
     <View accessibilityRole="alert" style={s.error}>
-      <Text style={[s.text, { color: theme.destructiveForeground }]}>{error}</Text>
+      <Text style={[s.text, { color: theme.errorForeground }]}>{error}</Text>
     </View>
   ) : null;
 }
