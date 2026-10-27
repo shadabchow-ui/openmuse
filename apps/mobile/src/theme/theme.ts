@@ -61,32 +61,32 @@ const TEXT = "#11191C";
 const PAPER = "#FFFFFF";
 
 export const lightTheme: ThemeRoles = {
-  background: "#FCFCFC", // colors.canvas
-  foreground: TEXT, // colors.text
-  card: PAPER, // colors.card
+  background: "#FCFCFC", // old canvas key
+  foreground: TEXT, // old text key
+  card: PAPER, // old card key
   cardForeground: TEXT,
   popover: PAPER,
   popoverForeground: TEXT,
-  primary: "#C8E7FF", // colors.blue
+  primary: "#C8E7FF", // old blue key
   primaryForeground: TEXT, // old primary-button text
   // colors has no secondary surface: exact s.secondary background, recorded.
   secondary: "#F1F2F3",
   secondaryForeground: TEXT,
   muted: "#E2E4E7", // fork code-wash literal
-  mutedForeground: "#697176", // colors.muted (secondary text)
-  accent: "#F0EEFA", // colors.lavender
+  mutedForeground: "#697176", // old muted key (secondary text)
+  accent: "#F0EEFA", // old lavender key
   accentForeground: TEXT,
-  destructive: "#AA4A45", // colors.danger
+  destructive: "#AA4A45", // old danger key
   destructiveForeground: PAPER,
-  success: "#E3F3E8", // colors.green
+  success: "#E3F3E8", // old green key
   successForeground: "#1d7f53", // token light.success
-  warning: "#FDF0DF", // colors.orange
+  warning: "#FDF0DF", // old orange key
   warningForeground: TEXT,
-  border: "#EEEEF0", // colors.line
-  input: "#EEEEF0", // colors.line
-  ring: "#1473C8", // colors.blueDark
-  link: "#1473C8", // colors.blueDark
-  info: "#EDF7FD", // colors.sky
+  border: "#EEEEF0", // old line key
+  input: "#EEEEF0", // old line key
+  ring: "#1473C8", // old blueDark key
+  link: "#1473C8", // old blueDark key
+  info: "#EDF7FD", // old sky key
   scrim: "#11111361", // token light.scrim
   successText: "#248258", // fork run-status literal
   onInfo: TEXT,
