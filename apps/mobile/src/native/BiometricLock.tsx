@@ -1,11 +1,19 @@
 /** Biometric convenience lock: a local gate for the device-held token. */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
+import { Button, Card, ErrorNotice, makeStyles, useTheme } from "../ui";
 import { authenticateBiometric } from "./biometric";
-import { Button, Card, ErrorNotice, colors, s } from "../ui";
 
-export function BiometricLock({ onUnlocked, onSignOut }: { onUnlocked: () => void; onSignOut: () => void }) {
+export function BiometricLock({
+  onUnlocked,
+  onSignOut,
+}: {
+  onUnlocked: () => void;
+  onSignOut: () => void;
+}) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -25,7 +33,13 @@ export function BiometricLock({ onUnlocked, onSignOut }: { onUnlocked: () => voi
 
   return (
     <View
-      style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.canvas, padding: 24 }}
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: theme.background,
+        padding: 24,
+      }}
     >
       <View style={{ width: "100%", maxWidth: 420 }}>
         <Card>

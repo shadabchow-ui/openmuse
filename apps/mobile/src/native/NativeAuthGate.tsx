@@ -1,15 +1,15 @@
 /** Native sign-in gate: system-browser PKCE flow, revocation-aware, update-blocking. */
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Linking, Platform, Text, View } from "react-native";
-import { deviceLabel, openSignIn } from "./browser-auth";
-import { readNativeConfig, type NativeConfig } from "./config";
-import { random, sha256 } from "./crypto";
-import { createPkce } from "./pkce";
-import { AuthError } from "./errors";
+import { Button, Card, ErrorNotice, Mascot, makeStyles, useTheme } from "../ui";
 import { buildAuthorizeUrl, exchangeCode, parseCallback } from "./auth-flow";
+import { deviceLabel, openSignIn } from "./browser-auth";
+import { type NativeConfig, readNativeConfig } from "./config";
+import { random, sha256 } from "./crypto";
+import { AuthError } from "./errors";
+import { createPkce } from "./pkce";
 import type { SessionManager } from "./session-manager";
-import { Button, Card, ErrorNotice, Mascot, colors, s } from "../ui";
 
 const platform = Platform.OS === "ios" ? "ios" : "android";
 
@@ -34,6 +34,8 @@ export function NativeAuthGate({
   onCallbackConsumed?: () => void;
   children: (token: string) => ReactNode;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const [renderState, setRenderState] = useState(() => manager.state());
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -99,9 +101,16 @@ export function NativeAuthGate({
 
   if (renderState.kind === "restoring") {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.canvas }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: theme.background,
+        }}
+      >
         <Mascot size={56} />
-        <ActivityIndicator color={colors.blueDark} />
+        <ActivityIndicator color={theme.link} />
         <Text style={s.muted}>Opening your workspace…</Text>
       </View>
     );
@@ -114,7 +123,7 @@ export function NativeAuthGate({
           flex: 1,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: colors.canvas,
+          backgroundColor: theme.background,
           padding: 24,
         }}
       >
@@ -139,11 +148,21 @@ export function NativeAuthGate({
 
   return (
     <View
-      style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.canvas, padding: 24 }}
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: theme.background,
+        padding: 24,
+      }}
     >
       <View style={{ width: "100%", maxWidth: 420, gap: 22, alignItems: "center" }}>
         <Mascot size={72} />
-        <Text style={{ fontSize: 32, color: colors.text, letterSpacing: -1, fontWeight: "500" }}>Welcome.</Text>
+        <Text
+          style={{ fontSize: 32, color: theme.foreground, letterSpacing: -1, fontWeight: "500" }}
+        >
+          Welcome.
+        </Text>
         <Text style={[s.muted, { textAlign: "center" }]}>Sign in to open your workspace.</Text>
         <Card style={{ width: "100%" }}>
           <ErrorNotice error={message} />

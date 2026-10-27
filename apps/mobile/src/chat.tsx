@@ -8,7 +8,7 @@ import {
   useRenderToolCall,
 } from "@copilotkit/react-native/headless";
 import { ArrowDown, ArrowUp, FileText, RotateCcw, Square, X } from "lucide-react-native";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -43,7 +43,7 @@ import { PlanCard } from "./plan-card";
 import { SearchToolCard } from "./search-tool-card";
 import { FileThreadCard, TaskThreadCard } from "./thread-artifacts";
 import { type Selection, useMuseThread } from "./threads";
-import { Button, Card, CheckRow, colors, ErrorNotice, s } from "./ui";
+import { Button, Card, CheckRow, ErrorNotice, makeStyles, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 const displayParameters = z.record(z.string(), z.unknown());
@@ -162,6 +162,8 @@ function ServerToolCard({
   result: unknown;
   loading: boolean;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { data } = useAgentWorkspace();
   const { navigate } = useWorkspace();
   let value = result;
@@ -221,6 +223,8 @@ export function ChatScreen({
   active?: boolean;
   reconnectEpoch?: number;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { api, workspace: w, refresh, navigate, offline } = useWorkspace();
   const { data: agentWorkspace, refresh: refreshAgent } = useAgentWorkspace();
   const { enabled: richThreads, mainId, claimPrompt } = useMuseThread();
@@ -542,7 +546,7 @@ export function ChatScreen({
               style={{
                 fontSize: 28,
                 letterSpacing: -1,
-                color: colors.text,
+                color: theme.foreground,
                 textAlign: "center",
                 maxWidth: 350,
               }}
@@ -602,11 +606,17 @@ export function ChatScreen({
                       borderRadius: 22,
                       borderBottomRightRadius: user ? 7 : 22,
                       borderBottomLeftRadius: user ? 22 : 7,
-                      backgroundColor: user ? colors.blue : "#EEEEF0",
+                      backgroundColor: user ? theme.primary : theme.border,
                     }}
                   >
                     {user ? (
-                      <Text selectable style={[s.text, { fontSize: 16, lineHeight: 24 }]}>
+                      <Text
+                        selectable
+                        style={[
+                          s.text,
+                          { fontSize: 16, lineHeight: 24, color: theme.primaryForeground },
+                        ]}
+                      >
                         {text}
                       </Text>
                     ) : (
@@ -729,7 +739,7 @@ export function ChatScreen({
                 gap: 7,
                 paddingHorizontal: 19,
                 paddingVertical: 18,
-                backgroundColor: "#EEEEF0",
+                backgroundColor: theme.border,
                 borderRadius: 28,
               },
             ]}
@@ -741,7 +751,7 @@ export function ChatScreen({
                   width: 8,
                   height: 8,
                   borderRadius: 4,
-                  backgroundColor: colors.muted,
+                  backgroundColor: theme.mutedForeground,
                   opacity,
                 }}
               />
@@ -819,7 +829,7 @@ export function ChatScreen({
                   }}
                   style={{ padding: 8 }}
                 >
-                  <X size={16} color={colors.muted} />
+                  <X size={16} color={theme.mutedForeground} />
                 </Pressable>
               </View>
             ))}
@@ -871,12 +881,12 @@ export function ChatScreen({
         )}
         <View
           style={{
-            backgroundColor: "#FFF",
+            backgroundColor: theme.card,
             borderRadius: 32,
             borderWidth: 1,
-            borderColor: focused ? "#C7E4F9" : "#EEF0F2",
+            borderColor: focused ? theme.ring : theme.secondary,
             padding: 8,
-            shadowColor: "#18384B",
+            shadowColor: theme.scrim,
             shadowOpacity: focused ? 0.1 : 0.06,
             shadowRadius: 20,
             shadowOffset: { width: 0, height: 4 },
@@ -898,21 +908,21 @@ export function ChatScreen({
                       {
                         gap: 7,
                         maxWidth: "100%",
-                        backgroundColor: colors.sky,
+                        backgroundColor: theme.info,
                         borderRadius: 16,
                         paddingHorizontal: 11,
                         paddingVertical: 8,
                       },
                     ]}
                   >
-                    <FileText size={14} color={colors.blueDark} />
+                    <FileText size={14} color={theme.link} />
                     <Text
                       numberOfLines={1}
-                      style={{ flexShrink: 1, fontSize: 12, color: colors.text }}
+                      style={{ flexShrink: 1, fontSize: 12, color: theme.foreground }}
                     >
                       {f.name}
                     </Text>
-                    <X size={13} color={colors.muted} />
+                    <X size={13} color={theme.mutedForeground} />
                   </Pressable>
                 ))}
             </View>
@@ -929,10 +939,12 @@ export function ChatScreen({
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: 24,
-                backgroundColor: picking || pressed ? colors.sky : "transparent",
+                backgroundColor: picking || pressed ? theme.info : "transparent",
               })}
             >
-              <Text style={{ color: colors.text, fontSize: 29, fontWeight: "300", lineHeight: 32 }}>
+              <Text
+                style={{ color: theme.foreground, fontSize: 29, fontWeight: "300", lineHeight: 32 }}
+              >
                 +
               </Text>
             </Pressable>
@@ -952,13 +964,13 @@ export function ChatScreen({
                       : "Loading conversation…"
                     : "Message…"
               }
-              placeholderTextColor="#949B9F"
-              selectionColor={colors.blueDark}
+              placeholderTextColor={theme.mutedForeground}
+              selectionColor={theme.link}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
               style={{
                 flex: 1,
-                color: colors.text,
+                color: theme.foreground,
                 height: inputHeight,
                 minHeight: 44,
                 maxHeight: 140,
@@ -995,19 +1007,19 @@ export function ChatScreen({
                 width: 44,
                 height: 44,
                 borderRadius: 24,
-                backgroundColor: replying || draft.trim() ? colors.blue : "#F3F5F6",
+                backgroundColor: replying || draft.trim() ? theme.primary : theme.secondary,
                 alignItems: "center",
                 justifyContent: "center",
                 transform: [{ scale: pressed ? 0.94 : 1 }],
               })}
             >
               {replying ? (
-                <Square size={18} fill={colors.text} strokeWidth={0} />
+                <Square size={18} fill={theme.foreground} strokeWidth={0} />
               ) : (
                 <ArrowUp
                   size={25}
                   strokeWidth={1.8}
-                  color={draft.trim() ? colors.text : "#9CB5C5"}
+                  color={draft.trim() ? theme.foreground : theme.mutedForeground}
                 />
               )}
             </Pressable>

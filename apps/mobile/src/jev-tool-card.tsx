@@ -1,5 +1,5 @@
 import { Check, ExternalLink } from "lucide-react-native";
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Linking, Pressable, Text, View } from "react-native";
 import type { JevOption, JevPanel } from "../../../packages/domain/src/jev";
 import {
@@ -8,7 +8,7 @@ import {
   retryChoiceAvailable,
   selectionText,
 } from "./jev-actions";
-import { Button, Card, colors, ErrorNotice, s } from "./ui";
+import { Button, Card, ErrorNotice, makeStyles, useTheme } from "./ui";
 
 type JevInteraction = {
   threadId: string | null;
@@ -37,6 +37,8 @@ export const JevInteractionContext = createContext<JevInteraction>({
 });
 
 function SourceLink({ title, url }: { title: string; url: string }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <Pressable
       accessibilityRole="link"
@@ -44,10 +46,8 @@ function SourceLink({ title, url }: { title: string; url: string }) {
       onPress={() => void Linking.openURL(url)}
       style={({ pressed }) => [s.row, { gap: 4, opacity: pressed ? 0.65 : 1 }]}
     >
-      <Text style={[s.small, { color: colors.blueDark, textDecorationLine: "underline" }]}>
-        {title}
-      </Text>
-      <ExternalLink size={12} color={colors.blueDark} />
+      <Text style={[s.small, { color: theme.link, textDecorationLine: "underline" }]}>{title}</Text>
+      <ExternalLink size={12} color={theme.link} />
     </Pressable>
   );
 }
@@ -69,6 +69,8 @@ function ChoiceButton({
   position: number;
   onChoose: (optionId: string) => void;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   if (panel.type === "comparison") {
     const caption = /exhibit/i.test(panel.title) ? "Choose this exhibit" : "Choose this option";
     return (
@@ -80,15 +82,15 @@ function ChoiceButton({
         onPress={() => onChoose(option.id)}
         style={({ pressed }) => [
           s.button,
-          { alignSelf: "flex-start", backgroundColor: colors.blue },
+          { alignSelf: "flex-start", backgroundColor: theme.primary },
           (disabled || pending) && { opacity: 0.5 },
           pressed && { transform: [{ scale: 0.98 }] },
         ]}
       >
         {pending ? (
-          <ActivityIndicator size="small" color={colors.text} />
+          <ActivityIndicator size="small" color={theme.foreground} />
         ) : selected ? (
-          <Check size={15} color={colors.text} />
+          <Check size={15} color={theme.foreground} />
         ) : null}
         <Text style={s.buttonText}>{caption}</Text>
       </Pressable>
@@ -108,6 +110,8 @@ function ChoiceButton({
 }
 
 export function JevToolCard({ result, loading }: { result: unknown; loading: boolean }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const interaction = useContext(JevInteractionContext);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
@@ -117,7 +121,7 @@ export function JevToolCard({ result, loading }: { result: unknown; loading: boo
   if (loading) {
     return (
       <View style={[s.row, { gap: 10, padding: 14 }]}>
-        <ActivityIndicator size="small" color={colors.blueDark} />
+        <ActivityIndicator size="small" color={theme.link} />
         <Text style={s.muted}>Preparing choices…</Text>
       </View>
     );
@@ -219,7 +223,7 @@ export function JevToolCard({ result, loading }: { result: unknown; loading: boo
           {panel.options.map((option, index) => (
             <View
               key={option.id}
-              style={{ borderRadius: 16, padding: 14, gap: 9, backgroundColor: "#F6F7F8" }}
+              style={{ borderRadius: 16, padding: 14, gap: 9, backgroundColor: theme.secondary }}
             >
               <Text style={[s.text, { fontWeight: "600" }]}>{option.label}</Text>
               {!!option.details.length && (

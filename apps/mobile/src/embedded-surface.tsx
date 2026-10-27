@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Platform, Text } from "react-native";
 import type { RuntimeSurface } from "../../../packages/domain/src/muse-contract";
 import { apiConfig } from "./api-config";
 import { EmbedFrame } from "./embed-frame";
 import { newEmbedNonce } from "./embed-messages";
 import { safeSurfacePath, surfaceMode } from "./surface-url";
-import { Button, s } from "./ui";
+import { Button, makeStyles, useTheme } from "./ui";
 
 /**
  * A backend view. Only a `presence` view on a configured path prefix is framed (default: none), in a sandbox
@@ -13,6 +13,8 @@ import { Button, s } from "./ui";
  * what it sends, are in `embed-frame.tsx` and `embed-messages.ts`.
  */
 export function EmbeddedSurface({ surface }: { surface: RuntimeSurface }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const mode = surfaceMode(surface, Platform.OS, apiConfig.embedPrefixes);
   const path = safeSurfacePath(surface.path);
   const [nonce] = useState(() => (mode === "frame" ? newEmbedNonce() : null));

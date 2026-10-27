@@ -18,7 +18,7 @@ import {
   Trash2,
   X,
 } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Image, Linking, Platform, Text, View } from "react-native";
 import {
   type ActionProposal,
@@ -47,17 +47,17 @@ import {
   Card,
   CheckRow,
   Chip,
-  colors,
   dateLabel,
   Empty,
   ErrorNotice,
   Field,
   LinkRow,
+  makeStyles,
   resultSummary,
   SectionHeading,
   Sheet,
-  s,
   timeLabel,
+  useTheme,
 } from "./ui";
 import { type Detail, useWorkspace } from "./workspace";
 export function Details({ detail }: { detail: Detail }) {
@@ -110,6 +110,8 @@ export function Details({ detail }: { detail: Detail }) {
   );
 }
 function MailDetail({ mail: m }: { mail: Mail }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, api, refresh, open, close } = useWorkspace();
   const [error, setError] = useState("");
   const [importing, setImporting] = useState("");
@@ -156,7 +158,7 @@ function MailDetail({ mail: m }: { mail: Mail }) {
     >
       {loading && (
         <View style={[s.row, { gap: 10, paddingBottom: 20 }]}>
-          <ActivityIndicator color={colors.blueDark} />
+          <ActivityIndicator color={theme.link} />
           <Text style={s.muted}>Loading the conversation…</Text>
         </View>
       )}
@@ -227,6 +229,8 @@ function MailDetail({ mail: m }: { mail: Mail }) {
   );
 }
 function EmailEditor({ draft }: { draft?: Partial<EmailDraft> & { id?: string } }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, api, refresh, open, close, notify } = useWorkspace();
   const [to, setTo] = useState(draft?.to?.join(", ") || "");
   const [cc, setCc] = useState(draft?.cc?.join(", ") || "");
@@ -384,6 +388,8 @@ function EventEditor({
   draft?: EventDraft;
   neighbors?: CalendarEvent[];
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const seed = e || draft;
   const { workspace: w, api, open, close, refresh } = useWorkspace();
   const initialStart = new Date();
@@ -526,7 +532,7 @@ function EventEditor({
         placeholder="Anything else to keep in mind?"
       />
       {!!conflicts.length && (
-        <Card style={{ backgroundColor: colors.orange, padding: 16, marginBottom: 16 }}>
+        <Card style={{ backgroundColor: theme.warning, padding: 16, marginBottom: 16 }}>
           <Text style={s.heading}>This time overlaps</Text>
           {conflicts.map((c) => (
             <Text key={c.id} style={s.muted}>
@@ -558,6 +564,8 @@ function ReviewDetail({ initial }: { initial: ActionProposal }) {
 }
 /** External mode: nothing but a catalog summary is shown; there is no decide call on this path. */
 function ReviewUnavailable({ initial }: { initial: ActionProposal }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { close } = useWorkspace();
   return (
     <Sheet title={initial.title} subtitle="Approvals are decided in the console." onClose={close}>
@@ -573,6 +581,8 @@ function ReviewUnavailable({ initial }: { initial: ActionProposal }) {
  * on the backend's own signed-in approval page, which the console view below opens.
  */
 function CatalogReview({ initial }: { initial: ActionProposal }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, close } = useWorkspace();
   const action = w.actions.find((a) => a.id === initial.id) || initial;
   const view = catalogView(action);
@@ -584,9 +594,7 @@ function CatalogReview({ initial }: { initial: ActionProposal }) {
           {view.fields.map((field) => (
             <ReviewLine key={field.label} label={field.label} value={field.value} />
           ))}
-          <Chip tint={view.handoff ? colors.lavender : colors.green}>
-            {action.status.replace(/_/g, " ")}
-          </Chip>
+          <Chip tone={view.handoff ? "accent" : "success"}>{action.status.replace(/_/g, " ")}</Chip>
         </Card>
       ) : (
         <Text style={s.muted}>This approval could not be shown.</Text>
@@ -604,6 +612,8 @@ function CatalogReview({ initial }: { initial: ActionProposal }) {
   );
 }
 function ActionReview({ initial }: { initial: ActionProposal }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, api, refresh, close, open } = useWorkspace();
   const [local, setLocal] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -668,16 +678,14 @@ function ActionReview({ initial }: { initial: ActionProposal }) {
       onClose={close}
     >
       <View style={[s.row, { gap: 13, marginBottom: 21 }]}>
-        <View style={[s.iconBox, { backgroundColor: colors.lavender }]}>
-          <ShieldCheck size={22} color={colors.text} />
+        <View style={[s.iconBox, { backgroundColor: theme.accent }]}>
+          <ShieldCheck size={22} color={theme.foreground} />
         </View>
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={s.heading}>{action.title}</Text>
           <Text style={s.small}>{action.kind.replace(".", " · ")}</Text>
         </View>
-        <Chip tint={pending ? colors.lavender : colors.green}>
-          {action.status.replace(/_/g, " ")}
-        </Chip>
+        <Chip tone={pending ? "accent" : "success"}>{action.status.replace(/_/g, " ")}</Chip>
       </View>
       <Card style={{ gap: 13 }}>
         <ReviewLine label="Account" value={action.account || w.profile.email} />
@@ -745,7 +753,7 @@ function ActionReview({ initial }: { initial: ActionProposal }) {
       </Card>
       <ErrorNotice error={error || action.error} />
       {!!action.result && (
-        <Card style={{ marginTop: 16, backgroundColor: colors.green, padding: 18 }}>
+        <Card style={{ marginTop: 16, backgroundColor: theme.success, padding: 18 }}>
           <Text selectable style={s.text}>
             {resultSummary(action.result)}
           </Text>
@@ -795,6 +803,8 @@ function arrayText(value: unknown) {
   return Array.isArray(value) ? value.map(String).join(", ") : "";
 }
 function ReviewLine({ label, value }: { label: string; value: string }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View style={{ gap: 4 }}>
       <Text style={s.label}>{label}</Text>
@@ -805,6 +815,8 @@ function ReviewLine({ label, value }: { label: string; value: string }) {
   );
 }
 function FileDetail({ file: f }: { file: Artifact }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { api, refresh, open, close } = useWorkspace();
   const [values, setValues] = useState<Record<string, string | boolean>>(() =>
     Object.fromEntries(
@@ -910,6 +922,8 @@ function FileDetail({ file: f }: { file: Artifact }) {
   );
 }
 function BrowserDetail({ initial }: { initial: BrowserSession }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, api, refresh, close, notify } = useWorkspace();
   const [local, setLocal] = useState(initial);
   const [url, setUrl] = useState(initial.url);
@@ -1015,7 +1029,7 @@ function BrowserDetail({ initial }: { initial: BrowserSession }) {
             <Button onPress={() => setRetry(retry + 1)}>Retry connection</Button>
           ) : (
             <>
-              <ActivityIndicator color={colors.blueDark} />
+              <ActivityIndicator color={theme.link} />
               <Text style={s.muted}>Connecting to your browser…</Text>
             </>
           )}
@@ -1025,7 +1039,7 @@ function BrowserDetail({ initial }: { initial: BrowserSession }) {
       ) : browser.status === "active" && browser.previewUrl ? (
         <Image
           source={{ uri: api.url(browser.previewUrl) }}
-          style={{ width: "100%", height: 450, backgroundColor: colors.canvas }}
+          style={{ width: "100%", height: 450, backgroundColor: theme.background }}
           resizeMode="contain"
         />
       ) : (

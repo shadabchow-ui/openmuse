@@ -12,7 +12,7 @@ import {
   Terminal,
   Upload,
 } from "lucide-react-native";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, AppState, Platform, Text, View } from "react-native";
 import type { Artifact } from "../../../packages/domain/src";
 import type {
@@ -22,7 +22,17 @@ import type {
 } from "../../../packages/domain/src/computer";
 import { useComputerDraft } from "./computer-drafts";
 import { DesktopStream } from "./desktop-stream";
-import { Button, Card, colors, Empty, ErrorNotice, Field, LinkRow, s, timeLabel } from "./ui";
+import {
+  Button,
+  Card,
+  Empty,
+  ErrorNotice,
+  Field,
+  LinkRow,
+  makeStyles,
+  timeLabel,
+  useTheme,
+} from "./ui";
 import { useWorkspace } from "./workspace";
 
 const mono = Platform.OS === "ios" ? "Menlo" : "monospace";
@@ -35,6 +45,8 @@ export function LinuxWorkspace({
   tab: "Terminal" | "Files" | "Desktop";
   onSnapshot?: (snapshot: ComputerSnapshot) => void;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { api } = useWorkspace();
   const [snapshot, setSnapshot] = useState<ComputerSnapshot>();
   const [error, setError] = useState("");
@@ -152,9 +164,9 @@ export function LinuxWorkspace({
   const commandRunning = executing || snapshot?.commands.some((item) => item.status === "running");
   return (
     <View style={{ gap: 16 }}>
-      <Card style={{ backgroundColor: colors.sky, gap: 12 }}>
+      <Card style={{ backgroundColor: theme.info, gap: 12 }}>
         <View style={[s.row, { gap: 12 }]}>
-          <Terminal size={24} color={colors.blueDark} />
+          <Terminal size={24} color={theme.link} />
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={s.heading}>Your Linux workspace</Text>
             <Text style={s.muted}>
@@ -169,7 +181,7 @@ export function LinuxWorkspace({
                       : "Connecting…"}
             </Text>
           </View>
-          {!snapshot && !error && <ActivityIndicator color={colors.blueDark} />}
+          {!snapshot && !error && <ActivityIndicator color={theme.link} />}
         </View>
         {!!snapshot?.message && <Text style={s.small}>{snapshot.message}</Text>}
         {snapshot?.enabled && (
@@ -213,8 +225,10 @@ export function LinuxWorkspace({
         <>
           <View style={{ display: tab === "Terminal" ? "flex" : "none", gap: 16 }}>
             {editingCommand || command.length > 0 || snapshot.commands.length === 0 ? (
-              <View style={{ borderRadius: 22, backgroundColor: "#F1F3F4", padding: 18, gap: 8 }}>
-                <Text style={{ color: colors.muted, fontSize: 12, fontFamily: mono }}>
+              <View
+                style={{ borderRadius: 22, backgroundColor: theme.secondary, padding: 18, gap: 8 }}
+              >
+                <Text style={{ color: theme.mutedForeground, fontSize: 12, fontFamily: mono }}>
                   TERMINAL
                 </Text>
                 <Field
@@ -258,7 +272,7 @@ export function LinuxWorkspace({
                 >
                   Run command
                 </Button>
-                <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18 }}>
+                <Text style={{ color: theme.mutedForeground, fontSize: 12, lineHeight: 18 }}>
                   {snapshot.network === "enabled"
                     ? "Runs on your computer with internet access. Start GUI apps with >/dev/null 2>&1 & to open them on the Desktop tab."
                     : "Runs on your computer. Network access is off. Use Browser for the web."}
@@ -311,6 +325,8 @@ export function LinuxWorkspace({
 
 // Live view of the computer's desktop, shared with the chat's desktop card.
 function ComputerDesktop({ running }: { running: boolean }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   if (!running)
     return (
       <Empty
@@ -333,6 +349,8 @@ function ComputerDesktop({ running }: { running: boolean }) {
 }
 
 function CommandReceipt({ run }: { run: ComputerCommand }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const [expanded, setExpanded] = useState(true);
   return (
     <Card style={{ gap: 10 }}>
@@ -343,10 +361,10 @@ function CommandReceipt({ run }: { run: ComputerCommand }) {
             {
               color:
                 run.status === "succeeded"
-                  ? "#248258"
+                  ? theme.successText
                   : run.status === "running"
-                    ? colors.blueDark
-                    : colors.danger,
+                    ? theme.link
+                    : theme.destructive,
             },
           ]}
         >
@@ -372,7 +390,7 @@ function CommandReceipt({ run }: { run: ComputerCommand }) {
               selectable
               style={[
                 s.text,
-                { fontFamily: mono, fontSize: 12, lineHeight: 19, color: colors.danger },
+                { fontFamily: mono, fontSize: 12, lineHeight: 19, color: theme.destructive },
               ]}
             >
               {run.stderr}
@@ -398,6 +416,8 @@ function CommandReceipt({ run }: { run: ComputerCommand }) {
 }
 
 function ComputerFiles({ running, active }: { running: boolean; active: boolean }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { api, workspace, open, refresh } = useWorkspace();
   const [path, setPath] = useComputerDraft("path");
   const [directory, setDirectory] = useState<ComputerDirectory>();
@@ -531,13 +551,13 @@ function ComputerFiles({ running, active }: { running: boolean; active: boolean 
     <View style={{ gap: 12 }}>
       <View style={s.between}>
         <Text style={s.heading}>Workspace files</Text>
-        {(busy || loading) && <ActivityIndicator color={colors.blueDark} />}
+        {(busy || loading) && <ActivityIndicator color={theme.link} />}
       </View>
       <Text selectable style={[s.small, { fontFamily: mono }]}>
         {editor?.path || path}
       </Text>
       <ErrorNotice error={error} />
-      {!!notice && <Text style={[s.small, { color: "#248258" }]}>{notice}</Text>}
+      {!!notice && <Text style={[s.small, { color: theme.successText }]}>{notice}</Text>}
       {!running && (
         <Text style={s.muted}>Start the computer to browse or edit its saved files.</Text>
       )}

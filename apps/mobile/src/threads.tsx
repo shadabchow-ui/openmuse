@@ -9,10 +9,18 @@ import {
   RefreshCw,
   Settings2,
 } from "lucide-react-native";
-import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { capabilityOf } from "./capabilities";
-import { Button, colors, ErrorNotice, Field, LinkRow, Sheet, s } from "./ui";
+import { Button, ErrorNotice, Field, LinkRow, makeStyles, Sheet, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 function newThreadId() {
@@ -101,6 +109,8 @@ export function useMuseThread() {
   return context;
 }
 export function ThreadsSheet({ onClose }: { onClose: () => void }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const {
     enabled,
     selection,
@@ -144,7 +154,7 @@ export function ThreadsSheet({ onClose }: { onClose: () => void }) {
             {mainError ? (
               <Button onPress={retry}>Retry main chat</Button>
             ) : (
-              <ActivityIndicator color={colors.blueDark} />
+              <ActivityIndicator color={theme.link} />
             )}
           </>
         ) : enabled ? (
@@ -174,7 +184,7 @@ export function ThreadsSheet({ onClose }: { onClose: () => void }) {
                 {archived ? "Show active" : "Archived"}
               </Button>
             </View>
-            {threads.isLoading && <ActivityIndicator color={colors.blueDark} />}
+            {threads.isLoading && <ActivityIndicator color={theme.link} />}
             <ErrorNotice error={error || threads.error?.message} />
             {threads.error && (
               <Button small onPress={threads.refetchThreads}>
@@ -207,7 +217,7 @@ export function ThreadsSheet({ onClose }: { onClose: () => void }) {
                   style={{
                     paddingVertical: 12,
                     borderBottomWidth: 1,
-                    borderBottomColor: colors.line,
+                    borderBottomColor: theme.border,
                     gap: 10,
                   }}
                 >
@@ -221,7 +231,7 @@ export function ThreadsSheet({ onClose }: { onClose: () => void }) {
                     }}
                     style={[s.row, { gap: 10 }]}
                   >
-                    <MessageCircle size={19} color={colors.text} />
+                    <MessageCircle size={19} color={theme.foreground} />
                     <Text style={[s.text, { flex: 1 }]}>
                       {thread.name || "Untitled conversation"}
                     </Text>

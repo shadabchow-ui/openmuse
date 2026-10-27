@@ -1,13 +1,13 @@
-/** Native theme tokens in the shape the generated DS-01 output will have.
+/**
+ * Token-driven theme roles for the OpenMuse client (DS-05).
  *
- * Light values map the fork's current `colors` (plus `s.secondary`'s exact
- * background, recorded below) to roles. Dark repeats the light values until
- * DS-05 supplies dark values. Nothing here changes the app's appearance.
+ * Light scheme = the fork`s pre-existing colours verbatim (pixel parity).
+ * Dark scheme = DS-01 generated token roles (`generated/open-muse.ts`,
+ * pearl-a-pure) only. Wash roles pair with on-wash text roles so descendants
+ * stay readable in both schemes; see `docs/THEME.md` for the full map.
  */
 
-declare const require:
-  | undefined
-  | ((id: string) => { useColorScheme: () => "light" | "dark" | null | undefined });
+import { dark as tokenDark } from "./generated/open-muse";
 
 export interface ThemeRoles {
   background: string;
@@ -26,6 +26,8 @@ export interface ThemeRoles {
   accentForeground: string;
   destructive: string;
   destructiveForeground: string;
+  errorBackground: string;
+  errorForeground: string;
   success: string;
   successForeground: string;
   warning: string;
@@ -34,6 +36,17 @@ export interface ThemeRoles {
   input: string;
   ring: string;
   link: string;
+  info: string;
+  scrim: string;
+  /** Standalone saturated status text on default surfaces. */
+  successText: string;
+  /** Text on info/success/accent/warning wash surfaces. */
+  onInfo: string;
+  onSuccess: string;
+  onAccent: string;
+  onWarning: string;
+  /** The scheme this object was resolved for (lets components pair tones). */
+  scheme: "light" | "dark";
 }
 
 export interface ThemeScale {
@@ -50,42 +63,91 @@ const TEXT = "#11191C";
 const PAPER = "#FFFFFF";
 
 export const lightTheme: ThemeRoles = {
-  background: "#FCFCFC", // colors.canvas
-  foreground: TEXT, // colors.text
-  card: PAPER, // colors.card
+  background: "#FCFCFC", // old canvas key
+  foreground: TEXT, // old text key
+  card: PAPER, // old card key
   cardForeground: TEXT,
   popover: PAPER,
   popoverForeground: TEXT,
-  primary: "#C8E7FF", // colors.blue (s.primary background; labels use text)
-  primaryForeground: TEXT,
-  // colors has no secondary surface: exact s.secondary background, recorded, no visual change.
+  primary: "#C8E7FF", // old blue key
+  primaryForeground: TEXT, // old primary-button text
+  // colors has no secondary surface: exact s.secondary background, recorded.
   secondary: "#F1F2F3",
   secondaryForeground: TEXT,
-  muted: "#697176", // colors.muted
-  mutedForeground: PAPER,
-  accent: "#1473C8", // colors.blueDark
-  accentForeground: PAPER,
-  destructive: "#AA4A45", // colors.danger
+  muted: "#E2E4E7", // fork code-wash literal
+  mutedForeground: "#697176", // old muted key (secondary text)
+  accent: "#F0EEFA", // old lavender key
+  accentForeground: TEXT,
+  destructive: "#AA4A45", // old danger key
   destructiveForeground: PAPER,
-  success: "#E3F3E8", // colors.green
-  successForeground: TEXT,
-  warning: "#FDF0DF", // colors.orange
+  errorBackground: "#FBEFED", // existing light error wash, preserved byte-for-byte
+  errorForeground: "#AA4A45", // existing light error text
+
+  success: "#E3F3E8", // old green key
+  successForeground: "#1d7f53", // token light.success
+  warning: "#FDF0DF", // old orange key
   warningForeground: TEXT,
-  border: "#EEEEF0", // colors.line
-  input: "#EEEEF0", // colors.line
-  ring: "#1473C8", // colors.blueDark
-  link: "#1473C8", // colors.blueDark
+  border: "#EEEEF0", // old line key
+  input: "#EEEEF0", // old line key
+  ring: "#1473C8", // old blueDark key
+  link: "#1473C8", // old blueDark key
+  info: "#EDF7FD", // old sky key
+  scrim: "#11111361", // token light.scrim
+  successText: "#248258", // fork run-status literal
+  onInfo: TEXT,
+  onSuccess: TEXT,
+  onAccent: TEXT,
+  onWarning: TEXT,
+  scheme: "light",
 };
 
-/** DS-05 supplies the dark values; until then dark repeats light. */
-export const darkTheme: ThemeRoles = { ...lightTheme };
+export const darkTheme: ThemeRoles = {
+  background: tokenDark.background,
+  foreground: tokenDark.foreground,
+  card: tokenDark.card,
+  cardForeground: tokenDark["card-foreground"],
+  popover: tokenDark.popover,
+  popoverForeground: tokenDark["popover-foreground"],
+  primary: tokenDark.primary,
+  primaryForeground: tokenDark["primary-foreground"],
+  secondary: tokenDark.secondary,
+  secondaryForeground: tokenDark["secondary-foreground"],
+  muted: tokenDark.muted,
+  mutedForeground: tokenDark["muted-foreground"],
+  accent: tokenDark.accent,
+  accentForeground: tokenDark["accent-foreground"],
+  destructive: tokenDark.destructive,
+  destructiveForeground: tokenDark["destructive-foreground"],
+  errorBackground: tokenDark.destructive,
+  errorForeground: tokenDark["destructive-foreground"],
+  success: tokenDark.success,
+  successForeground: tokenDark["success-foreground"],
+  warning: tokenDark.warning,
+  warningForeground: tokenDark["warning-foreground"],
+  border: tokenDark.border,
+  input: tokenDark.input,
+  ring: tokenDark.ring,
+  link: tokenDark.link,
+  info: tokenDark.info,
+  scrim: tokenDark.scrim,
+  successText: tokenDark.success,
+  onInfo: tokenDark["info-foreground"],
+  onSuccess: tokenDark["success-foreground"],
+  onWarning: tokenDark["warning-foreground"],
+  onAccent: tokenDark["accent-foreground"],
+  scheme: "dark",
+};
 
 export type ThemeChoice = "light" | "dark" | "system";
 
 export function resolveTheme(choice: ThemeChoice, system: "light" | "dark" | null): ThemeRoles {
   const scheme = choice === "system" ? (system ?? "light") : choice;
-  return scheme === "dark" ? darkTheme : lightTheme;
+  return scheme === "dark" ? { ...darkTheme, scheme: "dark" } : { ...lightTheme, scheme: "light" };
 }
+
+declare const require:
+  | undefined
+  | ((id: string) => { useColorScheme: () => "light" | "dark" | null | undefined });
 
 function systemScheme(): "light" | "dark" | null {
   try {
@@ -97,8 +159,8 @@ function systemScheme(): "light" | "dark" | null {
 }
 
 /** Follows the OS Appearance on device; resolves to light where Appearance is unavailable. */
-export function useTheme(choice: ThemeChoice = "system"): ThemeRoles {
-  return resolveTheme(choice, systemScheme());
+export function systemSchemeOrNull(): "light" | "dark" | null {
+  return systemScheme();
 }
 
 export interface ThemeChoiceStorage {
@@ -125,6 +187,9 @@ export async function loadThemeChoice(storage: ThemeChoiceStorage): Promise<Them
   return saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
 }
 
-export async function saveThemeChoice(storage: ThemeChoiceStorage, choice: ThemeChoice): Promise<void> {
+export async function saveThemeChoice(
+  storage: ThemeChoiceStorage,
+  choice: ThemeChoice,
+): Promise<void> {
   await storage.save(choice);
 }

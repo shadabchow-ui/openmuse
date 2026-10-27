@@ -2,7 +2,7 @@ import { ExternalLink } from "lucide-react-native";
 import { memo, useEffect, useState } from "react";
 import { ActivityIndicator, AppState, Linking, Platform, View } from "react-native";
 import BrowserConsole from "./BrowserConsole";
-import { Button, colors, ErrorNotice } from "./ui";
+import { Button, ErrorNotice, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
@@ -72,6 +72,7 @@ export const DesktopStream = memo(function DesktopStream({
   /** False shows only the Open desktop button, also on web. */
   embed?: boolean;
 }) {
+  const theme = useTheme();
   const embedded = embed && Platform.OS === "web";
   const { api } = useWorkspace();
   const { url, error, setError } = useDesktopStream(running && embedded);
@@ -92,7 +93,7 @@ export const DesktopStream = memo(function DesktopStream({
   return (
     <View style={{ gap: 12 }}>
       <ErrorNotice error={error} />
-      {embedded && !url && !error && <ActivityIndicator color={colors.blueDark} />}
+      {embedded && !url && !error && <ActivityIndicator color={theme.link} />}
       {!!url && embed && Platform.OS === "web" && (
         <BrowserConsole url={url} title="Computer desktop" sandboxed />
       )}

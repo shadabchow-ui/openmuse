@@ -1,11 +1,11 @@
 /** Development-only diagnostics: compatibility, session summary, streaming probe. */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { API_URL, apiPath, type MuseApi } from "../api";
+import { Button, Card, ErrorNotice, makeStyles, useTheme } from "../ui";
 import { isLocalGatewayUrl, type NativeConfig } from "./config";
 import { nativeHeaders } from "./headers";
-import { Button, Card, ErrorNotice, s } from "../ui";
 
 interface ProbeChunk {
   atMs: number;
@@ -36,7 +36,8 @@ async function runStreamingProbe(
   } catch {
     return { chunks: [], error: "Probe request failed." };
   }
-  if (!response.ok || !response.body) return { chunks: [], error: `Probe answered ${response.status}.` };
+  if (!response.ok || !response.body)
+    return { chunks: [], error: `Probe answered ${response.status}.` };
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -72,6 +73,8 @@ export function Diagnostics({
   offline: boolean;
   pushStatus: string;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   if (!__DEV__) return null;
   const localOnly = isLocalGatewayUrl(cfg.apiUrl);
   const [compat, setCompat] = useState("");
@@ -111,7 +114,12 @@ export function Diagnostics({
   return (
     <Card>
       <Text style={s.text}>Diagnostics (development only)</Text>
-      <Text style={s.muted}>Session: {session ? `${session.publicId} until ${new Date(session.expiresAtMs).toISOString()}` : "none"}</Text>
+      <Text style={s.muted}>
+        Session:{" "}
+        {session
+          ? `${session.publicId} until ${new Date(session.expiresAtMs).toISOString()}`
+          : "none"}
+      </Text>
       <Text style={s.muted}>Connectivity: {offline ? "offline" : "online"}</Text>
       <Text style={s.muted}>Push: {pushStatus}</Text>
       <Button onPress={() => void checkCompat()} busy={busy}>
@@ -121,12 +129,15 @@ export function Diagnostics({
       <Button onPress={() => void checkStream()} busy={busy} disabled={!localOnly}>
         Run streaming probe
       </Button>
-      {!localOnly ? <Text style={s.muted}>Streaming probe runs only against a local server</Text> : null}
+      {!localOnly ? (
+        <Text style={s.muted}>Streaming probe runs only against a local server</Text>
+      ) : null}
       {probe ? (
         <View>
           <ErrorNotice error={probe.error} />
           <Text style={s.small}>
-            {probe.chunks.length} chunks{probe.chunks.length > 0 ? `, first at ${probe.chunks[0]!.atMs} ms` : ""} —{" "}
+            {probe.chunks.length} chunks
+            {probe.chunks.length > 0 ? `, first at ${probe.chunks[0]!.atMs} ms` : ""} —{" "}
             {passed ? "pass" : "not passed"}
           </Text>
           {probe.chunks.map((chunk, index) => (

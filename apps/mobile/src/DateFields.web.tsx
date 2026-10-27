@@ -1,5 +1,6 @@
+import { useMemo } from "react";
 import { Text, View } from "react-native";
-import { colors, s } from "./ui";
+import { makeStyles, useTheme } from "./ui";
 
 interface DateFieldsProps {
   label: string;
@@ -9,13 +10,15 @@ interface DateFieldsProps {
   onChange: (date: string, time: string) => void;
 }
 export default function DateFields({ label, date, time, allDay, onChange }: DateFieldsProps) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const style = {
-    border: `1px solid ${colors.line}`,
+    border: `1px solid ${theme.border}`,
     borderRadius: 12,
     padding: 13,
     fontSize: 14,
-    color: colors.text,
-    background: "#FFF",
+    color: theme.foreground,
+    background: theme.card,
     fontFamily: "inherit",
     width: "100%",
     boxSizing: "border-box" as const,
@@ -24,7 +27,7 @@ export default function DateFields({ label, date, time, allDay, onChange }: Date
   return (
     <View style={{ flexDirection: "row", gap: 12, marginBottom: 16 }}>
       <View style={{ flex: 1.2, gap: 7 }}>
-        <Text style={[s.small, { fontWeight: "600", color: colors.text }]}>{label} date</Text>
+        <Text style={[s.small, { fontWeight: "600", color: theme.foreground }]}>{label} date</Text>
         <input
           aria-label={`${label} date`}
           type="date"
@@ -35,7 +38,9 @@ export default function DateFields({ label, date, time, allDay, onChange }: Date
       </View>
       {!allDay && (
         <View style={{ flex: 1, gap: 7 }}>
-          <Text style={[s.small, { fontWeight: "600", color: colors.text }]}>{label} time</Text>
+          <Text style={[s.small, { fontWeight: "600", color: theme.foreground }]}>
+            {label} time
+          </Text>
           <input
             aria-label={`${label} time`}
             type="time"

@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import DateFields from "./DateFields";
 import { isCompleteInstant, localDateTime, zonedInstant } from "./date-time";
-import { colors, s } from "./ui";
+import { makeStyles, useTheme } from "./ui";
 export default function DateTimeEditor({
   label,
   value,
@@ -18,6 +18,8 @@ export default function DateTimeEditor({
 }) {
   const [date, setDate] = useState(value.slice(0, 10));
   const [time, setTime] = useState("09:00");
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const [error, setError] = useState("");
   useEffect(() => {
     try {
@@ -51,7 +53,7 @@ export default function DateTimeEditor({
     <View>
       <DateFields label={label} date={date} time={time} allDay={allDay} onChange={change} />
       {!!error && (
-        <Text style={[s.small, { color: colors.danger, marginBottom: 12 }]}>{error}</Text>
+        <Text style={[s.small, { color: theme.destructive, marginBottom: 12 }]}>{error}</Text>
       )}
     </View>
   );

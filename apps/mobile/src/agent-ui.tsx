@@ -19,7 +19,7 @@ import {
   Users,
   X,
 } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Image, Linking, Pressable, Text, View } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import type { Artifact, BrowserSession } from "../../../packages/domain/src";
@@ -36,21 +36,23 @@ import type {
 import { useAgentWorkspace } from "./agent-workspace";
 import { capabilityOf } from "./capabilities";
 import { ActivityScreen, ConnectionsScreen } from "./screens";
+import { financeArtwork } from "./theme/artwork";
+import { useTheme as useThemeChoice } from "./theme/ThemeProvider";
 import {
   Button,
   Card,
   CheckRow,
   Chip,
-  colors,
   Empty,
   ErrorNotice,
   Field,
   LinkRow,
   Mascot,
+  makeStyles,
   resultSummary,
   SectionHeading,
   Sheet,
-  s,
+  useTheme,
 } from "./ui";
 import { useWorkspace } from "./workspace";
 
@@ -74,6 +76,8 @@ function activeTask(task: AgentTask) {
   return !["succeeded", "failed", "cancelled"].includes(task.status);
 }
 export function AgentStatus() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { data, error, refresh } = useAgentWorkspace();
   if (data?.worker.running && !error) return null;
   return (
@@ -84,7 +88,7 @@ export function AgentStatus() {
           Reconnect agent
         </Button>
       )}
-      {!data && !error && <ActivityIndicator color={colors.blueDark} />}
+      {!data && !error && <ActivityIndicator color={theme.link} />}
       {data && !data.worker.running && (
         <Text style={s.small}>Worker is offline. Saved work will continue when it reconnects.</Text>
       )}
@@ -100,6 +104,8 @@ export function TaskCard({
   compact?: boolean;
   onOpen?: () => void;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { open } = useWorkspace();
   const done = task.plan.filter((step) => step.status === "succeeded").length;
   const next = task.plan.find((step) => ["running", "waiting"].includes(step.status));
@@ -118,17 +124,17 @@ export function TaskCard({
           padding: compact ? 15 : 20,
           gap: 11,
           borderRadius: 22,
-          backgroundColor: "#F0F1F2",
+          backgroundColor: theme.secondary,
         }}
       >
         <View style={[s.row, { gap: 10 }]}>
           <View
             style={[
               s.iconBox,
-              { width: 34, height: 34, backgroundColor: waiting ? colors.orange : colors.sky },
+              { width: 34, height: 34, backgroundColor: waiting ? theme.warning : theme.info },
             ]}
           >
-            <ListChecks size={18} color={colors.blueDark} />
+            <ListChecks size={18} color={theme.link} />
           </View>
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={s.heading}>{task.title}</Text>
@@ -137,15 +143,15 @@ export function TaskCard({
               {task.plan.length ? ` · ${done}/${task.plan.length} steps` : ""}
             </Text>
           </View>
-          <ChevronRight size={17} color={colors.muted} />
+          <ChevronRight size={17} color={theme.mutedForeground} />
         </View>
         {!!task.plan.length && (
-          <View style={{ height: 4, backgroundColor: colors.line, borderRadius: 4 }}>
+          <View style={{ height: 4, backgroundColor: theme.border, borderRadius: 4 }}>
             <View
               style={{
                 height: 4,
                 width: `${Math.round((done / task.plan.length) * 100)}%`,
-                backgroundColor: "#6AAEE0",
+                backgroundColor: theme.link,
                 borderRadius: 4,
               }}
             />
@@ -157,7 +163,7 @@ export function TaskCard({
           </Text>
         )}
         {waiting && (
-          <Text style={[s.small, { color: colors.blueDark, fontWeight: "600" }]}>
+          <Text style={[s.small, { color: theme.link, fontWeight: "600" }]}>
             {task.status === "waiting_approval" ? "Review requested" : "Your input is needed"}
           </Text>
         )}
@@ -181,6 +187,8 @@ export function ChatWork() {
   );
 }
 export function AgentActivityScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { data } = useAgentWorkspace();
   const [filter, setFilter] = useState("All");
   const tasks = [...(data?.tasks || [])]
@@ -215,6 +223,8 @@ export function AgentActivityScreen() {
   );
 }
 export function EvidenceList({ items }: { items: Evidence[] }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace, open } = useWorkspace();
   const [error, setError] = useState("");
   return (
@@ -222,9 +232,11 @@ export function EvidenceList({ items }: { items: Evidence[] }) {
       {items.map((item) => (
         <View
           key={item.id}
-          style={{ borderLeftWidth: 2, borderLeftColor: colors.blue, paddingLeft: 12, gap: 4 }}
+          style={{ borderLeftWidth: 2, borderLeftColor: theme.primary, paddingLeft: 12, gap: 4 }}
         >
-          <Text style={[s.small, { color: colors.text, fontWeight: "600" }]}>{item.title}</Text>
+          <Text style={[s.small, { color: theme.foreground, fontWeight: "600" }]}>
+            {item.title}
+          </Text>
           <Text selectable style={s.small}>
             {item.excerpt}
           </Text>
@@ -267,6 +279,8 @@ export function EvidenceList({ items }: { items: Evidence[] }) {
   );
 }
 export function TaskDetail({ taskId }: { taskId: string }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { api, workspace, close, open, refresh: refreshWorkspace } = useWorkspace();
   const { data, mutate } = useAgentWorkspace();
   const [detail, setDetail] = useState<{
@@ -383,7 +397,7 @@ export function TaskDetail({ taskId }: { taskId: string }) {
     >
       <ErrorNotice error={error} />
       {!task ? (
-        <ActivityIndicator color={colors.blueDark} />
+        <ActivityIndicator color={theme.link} />
       ) : (
         <View style={{ gap: 20 }}>
           <Text selectable style={s.text}>
@@ -443,7 +457,7 @@ export function TaskDetail({ taskId }: { taskId: string }) {
             )}
           </View>
           {task.status === "waiting_approval" && (
-            <Card style={{ backgroundColor: colors.lavender, gap: 12 }}>
+            <Card style={{ backgroundColor: theme.accent, gap: 12 }}>
               <Text style={s.heading}>Ready for your review</Text>
               <Text style={s.muted}>Review the exact action and account before it proceeds.</Text>
               <Button primary busy={busy} onPress={() => void review()}>
@@ -452,7 +466,7 @@ export function TaskDetail({ taskId }: { taskId: string }) {
             </Card>
           )}
           {task.status === "waiting_input" && (
-            <Card style={{ backgroundColor: colors.sky, gap: 10 }}>
+            <Card style={{ backgroundColor: theme.info, gap: 10 }}>
               <Text style={s.heading}>{task.question || "A detail from you will help"}</Text>
               {fieldNames.map((name) =>
                 missing.some(
@@ -519,7 +533,7 @@ export function TaskDetail({ taskId }: { taskId: string }) {
                   <Text
                     style={[
                       s.text,
-                      { color: step.status === "succeeded" ? colors.blueDark : colors.muted },
+                      { color: step.status === "succeeded" ? theme.link : theme.mutedForeground },
                     ]}
                   >
                     {step.status === "succeeded" ? "✓" : `${index + 1}.`}
@@ -536,7 +550,7 @@ export function TaskDetail({ taskId }: { taskId: string }) {
             </Card>
           )}
           {!!task.result && (
-            <Card style={{ backgroundColor: colors.green }}>
+            <Card style={{ backgroundColor: theme.success }}>
               <Text selectable style={s.text}>
                 {resultSummary(task.result)}
               </Text>
@@ -604,7 +618,7 @@ export function TaskDetail({ taskId }: { taskId: string }) {
           {detail?.events.map((event) => (
             <View
               key={event.id}
-              style={{ gap: 4, paddingLeft: 14, borderLeftWidth: 2, borderLeftColor: colors.line }}
+              style={{ gap: 4, paddingLeft: 14, borderLeftWidth: 2, borderLeftColor: theme.border }}
             >
               <Text style={s.small}>
                 {stamp(event.date)} · {statusLabel(event.kind)}
@@ -638,11 +652,13 @@ function display(value: unknown): string {
         : JSON.stringify(value, null, 2) || "";
 }
 export function ArtifactCard({ artifact }: { artifact: AgentArtifact }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const [expanded, setExpanded] = useState(false);
   if (artifact.kind === "finance") return <FinanceArtifact artifact={artifact} />;
   const rows = Object.entries(artifact.data);
   return (
-    <Card style={{ gap: 13, backgroundColor: colors.card }}>
+    <Card style={{ gap: 13, backgroundColor: theme.card }}>
       <View style={s.between}>
         <Text style={s.heading}>{artifact.title}</Text>
         <Chip>{statusLabel(artifact.kind)}</Chip>
@@ -662,7 +678,7 @@ export function ArtifactCard({ artifact }: { artifact: AgentArtifact }) {
                   style={{
                     paddingVertical: 8,
                     borderBottomWidth: 1,
-                    borderBottomColor: colors.line,
+                    borderBottomColor: theme.border,
                   }}
                 >
                   <Text selectable style={s.text}>
@@ -698,6 +714,8 @@ export function ArtifactCard({ artifact }: { artifact: AgentArtifact }) {
   );
 }
 function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const [details, setDetails] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const { mutate } = useAgentWorkspace();
@@ -733,7 +751,7 @@ function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
   const period = record(artifact.data.period);
   return (
     <Card
-      style={{ gap: 12, padding: 10, backgroundColor: "#EEEEF0", maxWidth: 440, width: "100%" }}
+      style={{ gap: 12, padding: 10, backgroundColor: theme.border, maxWidth: 440, width: "100%" }}
     >
       <Pressable
         accessibilityRole="button"
@@ -746,7 +764,7 @@ function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
             minHeight: 200,
             borderRadius: 16,
             overflow: "hidden",
-            backgroundColor: "#080B10",
+            backgroundColor: financeArtwork.base,
             padding: 20,
           }}
         >
@@ -754,15 +772,17 @@ function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
             <Svg width="100%" height="100%">
               <Defs>
                 <LinearGradient id="finance" x1="0" y1="0" x2="0.5" y2="1">
-                  <Stop offset="0" stopColor="#281066" />
-                  <Stop offset="0.5" stopColor="#163BBF" />
-                  <Stop offset="1" stopColor="#148CE8" />
+                  <Stop offset="0" stopColor={financeArtwork.gradient[0]} />
+                  <Stop offset="0.5" stopColor={financeArtwork.gradient[1]} />
+                  <Stop offset="1" stopColor={financeArtwork.gradient[2]} />
                 </LinearGradient>
               </Defs>
               <Rect width="100%" height="100%" fill="url(#finance)" />
             </Svg>
           </View>
-          <Text style={{ color: "#D4DCFC", fontSize: 11, lineHeight: 18, marginBottom: 20 }}>
+          <Text
+            style={{ color: financeArtwork.copy, fontSize: 11, lineHeight: 18, marginBottom: 20 }}
+          >
             Read from your imported transactions.{"\n"}
             {String(period?.from ?? "")} — {String(period?.to ?? "")}
             {"\n"}
@@ -778,9 +798,14 @@ function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
             ).map(([label, key]) => (
               <View
                 key={key}
-                style={{ flex: 1, padding: 11, borderRadius: 12, backgroundColor: "#1D2025" }}
+                style={{
+                  flex: 1,
+                  padding: 11,
+                  borderRadius: 12,
+                  backgroundColor: financeArtwork.tile,
+                }}
               >
-                <Text style={{ color: "#A4A7AD", fontSize: 9 }}>{label}</Text>
+                <Text style={{ color: financeArtwork.label, fontSize: 9 }}>{label}</Text>
                 <Text
                   selectable
                   numberOfLines={1}
@@ -789,13 +814,15 @@ function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
                   style={{
                     fontSize: 17,
                     fontWeight: "600",
-                    color: key === "saved" ? "#58D3AE" : "#FFF",
+                    color: key === "saved" ? financeArtwork.saved : financeArtwork.ink,
                     marginTop: 5,
                   }}
                 >
                   {amount(artifact.data[key])}
                 </Text>
-                <Text style={{ color: "#7E8289", fontSize: 8, marginTop: 4 }}>source currency</Text>
+                <Text style={{ color: financeArtwork.sublabel, fontSize: 8, marginTop: 4 }}>
+                  source currency
+                </Text>
               </View>
             ))}
           </View>
@@ -806,7 +833,7 @@ function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
             <Text style={[s.text, { fontWeight: "600" }]}>Finance tracker</Text>
             <Text style={s.small}>Spending, savings, and a plan for what’s next.</Text>
           </View>
-          <ChevronRight size={17} color={colors.muted} />
+          <ChevronRight size={17} color={theme.mutedForeground} />
         </View>
       </Pressable>
       {details && (
@@ -821,12 +848,12 @@ function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
                   <Text style={s.text}>{String(row.name)}</Text>
                   <Text style={s.text}>{amount(row.amount)}</Text>
                 </View>
-                <View style={{ height: 7, backgroundColor: "#DFE8EB", borderRadius: 8 }}>
+                <View style={{ height: 7, backgroundColor: theme.secondary, borderRadius: 8 }}>
                   <View
                     style={{
                       width: `${Math.min(100, (Number(row.amount) / spending) * 100)}%`,
                       height: 7,
-                      backgroundColor: colors.blueDark,
+                      backgroundColor: theme.link,
                       borderRadius: 8,
                     }}
                   />
@@ -887,6 +914,8 @@ function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
   );
 }
 export function DelegateSheet({ goalId, milestoneId }: { goalId?: string; milestoneId?: string }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace, close, open } = useWorkspace();
   const { data, delegate } = useAgentWorkspace();
   const goal = data?.goals.find((item) => item.id === goalId);
@@ -1037,6 +1066,8 @@ export function DelegateSheet({ goalId, milestoneId }: { goalId?: string; milest
   );
 }
 export function IdeasScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { data, mutate } = useAgentWorkspace();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -1077,7 +1108,7 @@ export function IdeasScreen() {
         .map((idea) => (
           <Card key={idea.id} style={{ gap: 7 }}>
             <Text style={s.heading}>{idea.title}</Text>
-            <Chip tint={colors.green}>Started</Chip>
+            <Chip tone="success">Started</Chip>
             {!!idea.taskId && <TaskLink taskId={idea.taskId} />}
           </Card>
         ))}
@@ -1100,6 +1131,8 @@ function TaskLink({ taskId, onOpen }: { taskId: string; onOpen?: () => void }) {
   );
 }
 function IdeaCard({ idea }: { idea: Idea }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { mutate } = useAgentWorkspace();
   const { open } = useWorkspace();
   const [expanded, setExpanded] = useState(false);
@@ -1120,7 +1153,7 @@ function IdeaCard({ idea }: { idea: Idea }) {
     }
   }
   return (
-    <View style={{ paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: colors.line }}>
+    <View style={{ paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: theme.border }}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`View idea: ${idea.title}`}
@@ -1178,6 +1211,8 @@ function IdeaCard({ idea }: { idea: Idea }) {
   );
 }
 export function GoalsScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { data } = useAgentWorkspace();
   const [adding, setAdding] = useState<string>();
   const [selectedGoal, setSelectedGoal] = useState<string>();
@@ -1198,11 +1233,11 @@ export function GoalsScreen() {
                 height: 16,
                 borderRadius: 8,
                 borderWidth: 5,
-                borderColor: "#D9F1E2",
-                backgroundColor: "#24A46B",
+                borderColor: theme.success,
+                backgroundColor: theme.successText,
               }}
             />
-            <Text style={[s.heading, { color: "#189A58" }]}>Tracking</Text>
+            <Text style={[s.heading, { color: theme.successText }]}>Tracking</Text>
           </View>
           <Button small icon={Plus} onPress={() => setAdding("Tracking")}>
             Track
@@ -1216,7 +1251,7 @@ export function GoalsScreen() {
             onPress={() => setSelectedMonitor(item.id)}
             style={[s.row, { gap: 12, paddingVertical: 13 }]}
           >
-            <Square size={21} color="#A7AAAC" />
+            <Square size={21} color={theme.mutedForeground} />
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={s.text}>{item.title}</Text>
               <Text numberOfLines={1} style={s.muted}>
@@ -1225,7 +1260,7 @@ export function GoalsScreen() {
                   : statusLabel(item.status)}
               </Text>
             </View>
-            <ChevronRight size={18} color="#A3A6A8" />
+            <ChevronRight size={18} color={theme.mutedForeground} />
           </Pressable>
         ))}
         {!monitors.length && (
@@ -1239,7 +1274,7 @@ export function GoalsScreen() {
           </Button>
         )}
       </View>
-      <View style={{ height: 1, backgroundColor: colors.line }} />
+      <View style={{ height: 1, backgroundColor: theme.border }} />
       <View style={{ gap: 8 }}>
         <View style={[s.row, { gap: 10, marginBottom: 5 }]}>
           <View
@@ -1248,11 +1283,11 @@ export function GoalsScreen() {
               height: 16,
               borderRadius: 8,
               borderWidth: 5,
-              borderColor: "#D7E9FA",
-              backgroundColor: "#3D9BDE",
+              borderColor: theme.info,
+              backgroundColor: theme.link,
             }}
           />
-          <Text style={[s.heading, { color: colors.blueDark }]}>Goals</Text>
+          <Text style={[s.heading, { color: theme.link }]}>Goals</Text>
         </View>
         {data?.goals.map((item) => (
           <Pressable
@@ -1264,8 +1299,8 @@ export function GoalsScreen() {
           >
             <Square
               size={21}
-              color="#A7AAAC"
-              fill={item.status === "completed" ? colors.green : "transparent"}
+              color={theme.mutedForeground}
+              fill={item.status === "completed" ? theme.success : "transparent"}
             />
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={s.text}>{item.title}</Text>
@@ -1273,7 +1308,7 @@ export function GoalsScreen() {
                 {item.description || statusLabel(item.status)}
               </Text>
             </View>
-            <ChevronRight size={18} color="#A3A6A8" />
+            <ChevronRight size={18} color={theme.mutedForeground} />
           </Pressable>
         ))}
         {!data?.goals.length && (
@@ -1282,7 +1317,7 @@ export function GoalsScreen() {
           </Text>
         )}
       </View>
-      <View style={{ height: 1, backgroundColor: colors.line }} />
+      <View style={{ height: 1, backgroundColor: theme.border }} />
       <Text style={s.heading}>Create a goal</Text>
       {[
         { name: "Health", icon: Heart },
@@ -1297,9 +1332,9 @@ export function GoalsScreen() {
           onPress={() => setAdding(item.name)}
           style={[s.row, { gap: 12, minHeight: 38 }]}
         >
-          <item.icon size={23} color="#989C9F" />
-          <Text style={[s.text, { flex: 1, color: "#666A6D" }]}>{item.name}</Text>
-          <Plus size={18} color="#989C9F" />
+          <item.icon size={23} color={theme.mutedForeground} />
+          <Text style={[s.text, { flex: 1, color: theme.mutedForeground }]}>{item.name}</Text>
+          <Plus size={18} color={theme.mutedForeground} />
         </Pressable>
       ))}
       {adding && (
@@ -1382,6 +1417,8 @@ function GoalForm({ onDone, category }: { onDone: () => void; category?: string 
   );
 }
 function GoalCard({ goal, onOpenTask }: { goal: Goal; onOpenTask?: () => void }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { data, mutate, delegate } = useAgentWorkspace();
   const { open } = useWorkspace();
   const [busy, setBusy] = useState(false);
@@ -1421,7 +1458,7 @@ function GoalCard({ goal, onOpenTask }: { goal: Goal; onOpenTask?: () => void })
     <Card style={{ gap: 12 }}>
       <View style={s.between}>
         <Text style={[s.heading, { flex: 1 }]}>{goal.title}</Text>
-        <Chip tint={goal.status === "completed" ? colors.green : colors.sky}>
+        <Chip tone={goal.status === "completed" ? "success" : "info"}>
           {statusLabel(goal.status)}
         </Chip>
       </View>
@@ -1488,6 +1525,8 @@ function GoalCard({ goal, onOpenTask }: { goal: Goal; onOpenTask?: () => void })
   );
 }
 function MonitorForm({ onDone }: { onDone: () => void }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace } = useWorkspace();
   const { mutate } = useAgentWorkspace();
   const [title, setTitle] = useState("");
@@ -1590,6 +1629,8 @@ function MonitorForm({ onDone }: { onDone: () => void }) {
   );
 }
 function MonitorCard({ monitor, onOpenTask }: { monitor: Monitor; onOpenTask?: () => void }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { mutate } = useAgentWorkspace();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1622,7 +1663,7 @@ function MonitorCard({ monitor, onOpenTask }: { monitor: Monitor; onOpenTask?: (
     <Card style={{ gap: 13 }}>
       <View style={s.between}>
         <Text style={[s.heading, { flex: 1 }]}>{monitor.title}</Text>
-        <Chip tint={colors.sky}>{statusLabel(monitor.status)}</Chip>
+        <Chip tone="info">{statusLabel(monitor.status)}</Chip>
       </View>
       <Text selectable style={s.small}>
         {monitor.url.startsWith("sample:") ? "Built-in availability page" : monitor.url}
@@ -1674,6 +1715,8 @@ function MonitorCard({ monitor, onOpenTask }: { monitor: Monitor; onOpenTask?: (
   );
 }
 export function NotificationsSheet() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { data, mutate } = useAgentWorkspace();
   const { close, open } = useWorkspace();
   const [error, setError] = useState("");
@@ -1696,7 +1739,7 @@ export function NotificationsSheet() {
         {data?.notifications.map((item) => (
           <Card
             key={item.id}
-            style={{ gap: 8, backgroundColor: item.read ? colors.card : colors.sky }}
+            style={{ gap: 8, backgroundColor: item.read ? theme.card : theme.info }}
           >
             <View style={s.between}>
               <Text style={s.heading}>{item.title}</Text>
@@ -1721,6 +1764,9 @@ export function NotificationsSheet() {
   );
 }
 export function AppsScreen() {
+  const { choice: appearanceChoice, setChoice: setAppearanceChoice } = useThemeChoice();
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { navigate, open, workspace } = useWorkspace();
   const { data, mutate } = useAgentWorkspace();
   const [query, setQuery] = useState("");
@@ -1801,7 +1847,7 @@ export function AppsScreen() {
       />
       <ConnectionsScreen query={query} />
       <Text style={s.heading}>On your computer</Text>
-      <Card style={{ paddingVertical: 3, backgroundColor: "#F4F5F6" }}>
+      <Card style={{ paddingVertical: 3, backgroundColor: theme.secondary }}>
         {shortcuts
           .filter((item) => item.visible)
           .filter((item) =>
@@ -1822,7 +1868,7 @@ export function AppsScreen() {
       {!!workspace.runtime.surfaces?.length && (
         <>
           <Text style={s.heading}>Views</Text>
-          <Card style={{ paddingVertical: 3, backgroundColor: "#F4F5F6" }}>
+          <Card style={{ paddingVertical: 3, backgroundColor: theme.secondary }}>
             {workspace.runtime.surfaces.map((surface) => (
               <LinkRow
                 key={surface.id}
@@ -1839,6 +1885,35 @@ export function AppsScreen() {
       </Button>
       {settings && (
         <>
+          <Card style={{ gap: 10 }}>
+            <SectionHeading title="Appearance" />
+            <View
+              accessibilityRole="radiogroup"
+              accessibilityLabel="Appearance"
+              style={[s.row, { gap: 8 }]}
+            >
+              {(["light", "dark", "system"] as const).map((value) => (
+                <Pressable
+                  key={value}
+                  accessibilityRole="radio"
+                  accessibilityLabel={value}
+                  accessibilityState={{ checked: appearanceChoice === value }}
+                  onPress={() => {
+                    void setAppearanceChoice(value);
+                  }}
+                >
+                  <Text
+                    style={[
+                      s.text,
+                      { color: appearanceChoice === value ? theme.link : theme.mutedForeground },
+                    ]}
+                  >
+                    {value}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </Card>
           {canEditIdentity && (
             <Card style={{ gap: 10 }}>
               <SectionHeading title="Your agent" />
@@ -1853,7 +1928,7 @@ export function AppsScreen() {
                     style={{
                       padding: 7,
                       borderRadius: 24,
-                      backgroundColor: avatar === item ? colors.sky : colors.canvas,
+                      backgroundColor: avatar === item ? theme.info : theme.background,
                     }}
                   >
                     <Mascot size={62} variant={item} />
@@ -1921,6 +1996,8 @@ export function AppsScreen() {
   );
 }
 function MemoryRow({ memory, canWrite = true }: { memory: AgentMemory; canWrite?: boolean }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { mutate } = useAgentWorkspace();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(memory.text);
@@ -1940,7 +2017,7 @@ function MemoryRow({ memory, canWrite = true }: { memory: AgentMemory; canWrite?
   }
   return (
     <View
-      style={{ gap: 8, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.line }}
+      style={{ gap: 8, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: theme.border }}
     >
       {editing ? (
         <Field label="Memory" value={text} onChangeText={setText} />

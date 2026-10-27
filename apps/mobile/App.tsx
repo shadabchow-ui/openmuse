@@ -8,8 +8,8 @@ import {
   Menu,
   MessageCircle,
   PanelsTopLeft,
-  Shapes,
   Settings,
+  Shapes,
   SquareCheck,
   X,
 } from "lucide-react-native";
@@ -43,6 +43,7 @@ import {
   createSession,
   ExternalAuthRequired,
   MuseApi,
+  setApiHooks,
 } from "./src/api";
 import { brandName, hasCustomBrand } from "./src/brand";
 import { visibleNav } from "./src/capabilities";
@@ -50,35 +51,44 @@ import { ChatScreen, WorkspaceTools } from "./src/chat";
 import { ComputerEntry } from "./src/computer";
 import { ComputerDraftProvider } from "./src/computer-drafts";
 import { Details } from "./src/details";
-import { BrowserScreen, CalendarScreen, FilesScreen, MailScreen } from "./src/screens";
-import { safeSignInTarget } from "./src/surface-url";
-import { ThreadsProvider, ThreadsSheet, useMuseThread } from "./src/threads";
-import { Button, Card, colors, ErrorNotice, Field, IconButton, Mascot, s } from "./src/ui";
-import { type Detail, useWorkspace, WorkspaceContext } from "./src/workspace";
 import { BiometricLock } from "./src/native/BiometricLock";
-import { Diagnostics } from "./src/native/Diagnostics";
-import { NativeAuthGate, nativeConfigFromEnv } from "./src/native/NativeAuthGate";
-import { OfflineBanner } from "./src/native/OfflineBanner";
-import { PushPrompt } from "./src/native/PushPrompt";
-import { setApiHooks } from "./src/api";
 import { biometricCapabilities } from "./src/native/biometric";
 import { shouldLock } from "./src/native/biometric-policy";
 import type { NativeConfig } from "./src/native/config";
+import { Diagnostics } from "./src/native/Diagnostics";
 import { parseDeepLink, type Route } from "./src/native/deep-link";
 import { createForegroundTracker } from "./src/native/foreground";
 import { nativeHeaders } from "./src/native/headers";
 import { ensureFreshInstall } from "./src/native/install-guard";
+import { NativeAuthGate, nativeConfigFromEnv } from "./src/native/NativeAuthGate";
 import { subscribeConnectivity } from "./src/native/network";
+import { OfflineBanner } from "./src/native/OfflineBanner";
+import { PushPrompt } from "./src/native/PushPrompt";
 import { addNotificationTapListener, registerForPush } from "./src/native/push";
 import { createSessionManager, type SessionManager } from "./src/native/session-manager";
 import {
-  readSecureSession,
-  writeSecureSession,
   clearSecureSession,
+  readSecureSession,
   readSecureString,
+  writeSecureSession,
   writeSecureString,
 } from "./src/native/token-store";
 import type { TokenStore } from "./src/native/token-store-core";
+import { BrowserScreen, CalendarScreen, FilesScreen, MailScreen } from "./src/screens";
+import { safeSignInTarget } from "./src/surface-url";
+import { ThemeProvider } from "./src/theme/ThemeProvider";
+import { ThreadsProvider, ThreadsSheet, useMuseThread } from "./src/threads";
+import {
+  Button,
+  Card,
+  ErrorNotice,
+  Field,
+  IconButton,
+  Mascot,
+  makeStyles,
+  useTheme,
+} from "./src/ui";
+import { type Detail, useWorkspace, WorkspaceContext } from "./src/workspace";
 
 const nav: { id: Section; label: string; icon: LucideIcon }[] = [
   { id: "chat", label: "Chat", icon: MessageCircle },
@@ -118,6 +128,16 @@ const secureStore: TokenStore = {
 };
 
 export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
+function AppContent() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const [token, setToken] = useState("");
   const [accessKey, setAccessKey] = useState("");
   const [busy, setBusy] = useState(true);
@@ -157,7 +177,7 @@ export default function App() {
         <SafeAreaView
           style={{
             flex: 1,
-            backgroundColor: colors.canvas,
+            backgroundColor: theme.background,
             justifyContent: "center",
             alignItems: "center",
             padding: 24,
@@ -166,13 +186,18 @@ export default function App() {
           <View style={{ width: "100%", maxWidth: 420, gap: 22, alignItems: "center" }}>
             {!hasCustomBrand(undefined, apiConfig) && <Mascot size={72} />}
             <Text
-              style={{ fontSize: 32, color: colors.text, letterSpacing: -1, fontWeight: "500" }}
+              style={{
+                fontSize: 32,
+                color: theme.foreground,
+                letterSpacing: -1,
+                fontWeight: "500",
+              }}
             >
               Welcome to {brandName(undefined, apiConfig)}.
             </Text>
             <Text style={[s.muted, { textAlign: "center" }]}>A little room for your day.</Text>
             {busy ? (
-              <ActivityIndicator color={colors.blueDark} />
+              <ActivityIndicator color={theme.link} />
             ) : signIn ? (
               <ExternalSignIn url={signIn.url} retry={() => void connect()} />
             ) : (
@@ -202,6 +227,8 @@ export default function App() {
 }
 /** External auth mode: no key field. Navigates once to a validated sign-in target, else shows a fixed notice. */
 function ExternalSignIn({ url, retry }: { url: string | null; retry: () => void }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const target = safeSignInTarget(url, apiConfig.signInOrigins);
   const navigated = useRef(false);
   const canNavigate = target !== null && Platform.OS === "web" && typeof window !== "undefined";
@@ -211,7 +238,7 @@ function ExternalSignIn({ url, retry }: { url: string | null; retry: () => void 
       window.location.assign(target);
     }
   }, [canNavigate, target]);
-  if (canNavigate) return <ActivityIndicator color={colors.blueDark} />;
+  if (canNavigate) return <ActivityIndicator color={theme.link} />;
   return (
     <Card style={{ width: "100%" }}>
       <Text style={s.text}>Sign-in is not configured.</Text>
@@ -230,6 +257,8 @@ function WorkspaceApp({
   cfg?: NativeConfig;
   onAuthCallbackUrl?: (url: string) => void;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const api = useMemo(() => new MuseApi(token), [token]);
   const [workspace, setWorkspace] = useState<Workspace>();
   const [section, setSection] = useState<Section>("chat");
@@ -351,7 +380,8 @@ function WorkspaceApp({
     void readSecureString(PUSH_SNOOZE_KEY)
       .then((snoozed) => {
         const at = snoozed === null ? NaN : Number(snoozed);
-        if (!snoozed || !Number.isFinite(at) || Date.now() - at > PUSH_SNOOZE_MS) setPushPrompt("ask");
+        if (!snoozed || !Number.isFinite(at) || Date.now() - at > PUSH_SNOOZE_MS)
+          setPushPrompt("ask");
       })
       .catch(() => {});
   }, [workspace]);
@@ -360,10 +390,16 @@ function WorkspaceApp({
     try {
       const registration = await registerForPush();
       setPushStatus(
-        registration.status === "registered" ? `registered:${registration.kind}` : registration.status,
+        registration.status === "registered"
+          ? `registered:${registration.kind}`
+          : registration.status,
       );
       if (registration.status === "registered") {
-        await api.request("/api/native/push-token", { kind: registration.kind, token: registration.token }, "POST");
+        await api.request(
+          "/api/native/push-token",
+          { kind: registration.kind, token: registration.token },
+          "POST",
+        );
       }
     } catch {
       setPushStatus("unavailable");
@@ -384,7 +420,7 @@ function WorkspaceApp({
       <SafeAreaView
         style={{
           flex: 1,
-          backgroundColor: colors.canvas,
+          backgroundColor: theme.background,
           alignItems: "center",
           justifyContent: "center",
           padding: 24,
@@ -401,7 +437,7 @@ function WorkspaceApp({
           </>
         ) : (
           <>
-            <ActivityIndicator color={colors.blueDark} />
+            <ActivityIndicator color={theme.link} />
             <Text style={s.muted}>Opening your workspace…</Text>
           </>
         )}
@@ -411,22 +447,33 @@ function WorkspaceApp({
     <>
       {nativeMode ? <OfflineBanner offline={offline} /> : null}
       <WorkspaceContext.Provider
-        value={{ workspace, api, section, navigate, refresh, open, close, notify: setToast, ask, offline }}
+        value={{
+          workspace,
+          api,
+          section,
+          navigate,
+          refresh,
+          open,
+          close,
+          notify: setToast,
+          ask,
+          offline,
+        }}
       >
-      <AgentWorkspaceProvider>
-        <ComputerDraftProvider key={token}>
-          <ThreadsProvider>
-            <WorkspaceShell
-              detail={detail}
-              toast={toast}
-              clearToast={() => setToast("")}
-              error={error}
-              prompt={prompt}
-              reconnectEpoch={nativeMode ? reconnectEpoch : undefined}
-            />
-          </ThreadsProvider>
-        </ComputerDraftProvider>
-      </AgentWorkspaceProvider>
+        <AgentWorkspaceProvider>
+          <ComputerDraftProvider key={token}>
+            <ThreadsProvider>
+              <WorkspaceShell
+                detail={detail}
+                toast={toast}
+                clearToast={() => setToast("")}
+                error={error}
+                prompt={prompt}
+                reconnectEpoch={nativeMode ? reconnectEpoch : undefined}
+              />
+            </ThreadsProvider>
+          </ComputerDraftProvider>
+        </AgentWorkspaceProvider>
       </WorkspaceContext.Provider>
       {nativeMode && manager && cfg ? (
         <NativeSettingsPanel
@@ -463,6 +510,8 @@ function WorkspaceShell({
   prompt?: { id: number; text: string };
   reconnectEpoch?: number;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace, section, navigate, open } = useWorkspace();
   const { data } = useAgentWorkspace();
   const {
@@ -515,7 +564,10 @@ function WorkspaceShell({
   return (
     <>
       <WorkspaceTools />
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }} edges={["top", "bottom"]}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: theme.background }}
+        edges={["top", "bottom"]}
+      >
         <View style={{ flex: 1, width: "100%", maxWidth: 760, alignSelf: "center" }}>
           <View
             style={{
@@ -547,7 +599,7 @@ function WorkspaceShell({
                   style={{
                     fontSize: 16,
                     fontWeight: "600",
-                    color: colors.text,
+                    color: theme.foreground,
                     letterSpacing: -0.4,
                   }}
                 >
@@ -555,7 +607,7 @@ function WorkspaceShell({
                 </Text>
                 <Text
                   numberOfLines={1}
-                  style={{ fontSize: 11, color: colors.muted, marginBottom: 6 }}
+                  style={{ fontSize: 11, color: theme.mutedForeground, marginBottom: 6 }}
                 >
                   {status}
                 </Text>
@@ -578,7 +630,7 @@ function WorkspaceShell({
                     position: "absolute",
                     top: 7,
                     right: 9,
-                    backgroundColor: colors.blueDark,
+                    backgroundColor: theme.link,
                   }}
                 />
               )}
@@ -620,7 +672,7 @@ function WorkspaceShell({
                   {threadsError ? (
                     <Button onPress={retryThreads}>Retry main chat</Button>
                   ) : threadsLoading ? (
-                    <ActivityIndicator color={colors.blueDark} />
+                    <ActivityIndicator color={theme.link} />
                   ) : null}
                   {!threadsLoading && selection.id !== mainId && (
                     <Text style={[s.small, { textAlign: "center", marginBottom: 8 }]}>
@@ -642,7 +694,11 @@ function WorkspaceShell({
                   ))}
                 </>
               ) : (
-                <ChatScreen prompt={prompt} active={section === "chat"} reconnectEpoch={reconnectEpoch} />
+                <ChatScreen
+                  prompt={prompt}
+                  active={section === "chat"}
+                  reconnectEpoch={reconnectEpoch}
+                />
               )}
             </View>
           </View>
@@ -660,15 +716,15 @@ function WorkspaceShell({
                 width: "100%",
                 maxWidth: 370,
                 padding: 5,
-                backgroundColor: "#FFF",
+                backgroundColor: theme.card,
                 borderRadius: 40,
-                shadowColor: "#132631",
+                shadowColor: theme.scrim,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.07,
                 shadowRadius: 18,
                 elevation: 3,
                 borderWidth: 1,
-                borderColor: "#F8F8F8",
+                borderColor: theme.border,
               }}
             >
               {visibleNav(nav, workspace.runtime).map((item) => {
@@ -685,11 +741,11 @@ function WorkspaceShell({
                       height: 47,
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: active ? "#F0F1F2" : "transparent",
+                      backgroundColor: active ? theme.secondary : "transparent",
                       borderRadius: 28,
                     }}
                   >
-                    <item.icon size={23} strokeWidth={1.8} color={colors.text} />
+                    <item.icon size={23} strokeWidth={1.8} color={theme.foreground} />
                   </Pressable>
                 );
               })}
@@ -707,20 +763,20 @@ function WorkspaceShell({
                 {
                   gap: 10,
                   padding: 14,
-                  backgroundColor: colors.text,
+                  backgroundColor: theme.foreground,
                   borderRadius: 20,
                   maxWidth: 560,
                 },
               ]}
             >
-              <Check size={16} color={colors.blue} />
-              <Text style={{ color: "#FFF", fontSize: 13, flexShrink: 1 }}>{toast}</Text>
+              <Check size={16} color={theme.card} />
+              <Text style={{ color: theme.card, fontSize: 13, flexShrink: 1 }}>{toast}</Text>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Dismiss notification"
                 onPress={clearToast}
               >
-                <X size={16} color="#FFF" />
+                <X size={16} color={theme.card} />
               </Pressable>
             </View>
           </View>
@@ -758,6 +814,8 @@ function WorkspaceShell({
 /** Native-mode root and settings panel (IOM-12 Step 11). Only rendered when AUTH_MODE is native. */
 
 function NativeModeRoot() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const cfg = useMemo(
     () =>
       nativeConfigFromEnv({
@@ -798,7 +856,7 @@ function NativeModeRoot() {
         <SafeAreaView
           style={{
             flex: 1,
-            backgroundColor: colors.canvas,
+            backgroundColor: theme.background,
             alignItems: "center",
             justifyContent: "center",
             padding: 24,
@@ -828,7 +886,12 @@ function NativeModeRoot() {
               ...nativeHeaders({ apiVersion: 1, appVersion: cfg.appVersion }, devicePlatform),
             }}
           >
-            <WorkspaceApp token={token} manager={manager} cfg={cfg} onAuthCallbackUrl={setCallbackUrl} />
+            <WorkspaceApp
+              token={token}
+              manager={manager}
+              cfg={cfg}
+              onAuthCallbackUrl={setCallbackUrl}
+            />
           </CopilotKitProvider>
         )}
       </NativeAuthGate>
@@ -865,6 +928,8 @@ function NativeSettingsPanel({
   onUnlocked: () => void;
   onSignOut: () => void;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const [panelOpen, setPanelOpen] = useState(false);
   const [renderState, setRenderState] = useState(() => manager.state());
   useEffect(() => manager.subscribe(() => setRenderState(manager.state())), [manager]);
@@ -875,7 +940,11 @@ function NativeSettingsPanel({
   return (
     <>
       <View style={{ position: "absolute", right: 16, top: 64 }}>
-        <IconButton icon={Settings} label="Native settings" onPress={() => setPanelOpen((v) => !v)} />
+        <IconButton
+          icon={Settings}
+          label="Native settings"
+          onPress={() => setPanelOpen((v) => !v)}
+        />
       </View>
       {panelOpen ? (
         <View style={{ position: "absolute", top: 116, left: 20, right: 20 }}>
@@ -904,7 +973,11 @@ function NativeSettingsPanel({
       ) : null}
       {pushPrompt !== "hidden" ? (
         <View style={{ position: "absolute", left: 0, right: 0, bottom: 90 }}>
-          <PushPrompt onTurnOn={onTurnOnPush} onNotNow={onSnoozePush} busy={pushPrompt === "busy"} />
+          <PushPrompt
+            onTurnOn={onTurnOnPush}
+            onNotNow={onSnoozePush}
+            busy={pushPrompt === "busy"}
+          />
         </View>
       ) : null}
       {locked ? (

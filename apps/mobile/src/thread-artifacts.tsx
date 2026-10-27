@@ -1,14 +1,16 @@
 import { ChevronRight, FileText } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import type { Artifact, BrowserSession } from "../../../packages/domain/src";
 import type { AgentArtifact, AgentTask } from "../../../packages/domain/src/agent";
 import { ArtifactCard, TaskCard } from "./agent-ui";
 import { BrowserThreadCard } from "./computer";
-import { Button, Card, colors, ErrorNotice, s } from "./ui";
+import { Button, Card, ErrorNotice, makeStyles, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 export function FileThreadCard({ file }: { file: Artifact }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { open } = useWorkspace();
   return (
     <Pressable
@@ -17,8 +19,8 @@ export function FileThreadCard({ file }: { file: Artifact }) {
       onPress={() => open({ type: "file", file })}
       style={{ width: "100%", maxWidth: 440 }}
     >
-      <Card style={{ padding: 18, backgroundColor: "#F0F1F2", gap: 18 }}>
-        <View style={{ borderRadius: 12, padding: 22, backgroundColor: "#FFF", gap: 14 }}>
+      <Card style={{ padding: 18, backgroundColor: theme.secondary, gap: 18 }}>
+        <View style={{ borderRadius: 12, padding: 22, backgroundColor: theme.card, gap: 14 }}>
           <Text style={[s.heading, { fontSize: 18 }]}>{file.name.replace(/\.pdf$/i, "")}</Text>
           {file.fields?.length ? (
             file.fields.slice(0, 4).map((field) => (
@@ -27,7 +29,7 @@ export function FileThreadCard({ file }: { file: Artifact }) {
                 style={{
                   gap: 5,
                   borderBottomWidth: 1,
-                  borderBottomColor: colors.line,
+                  borderBottomColor: theme.border,
                   paddingBottom: 9,
                 }}
               >
@@ -44,8 +46,8 @@ export function FileThreadCard({ file }: { file: Artifact }) {
           )}
         </View>
         <View style={[s.row, { gap: 13 }]}>
-          <View style={{ backgroundColor: "#FC2359", padding: 9, borderRadius: 9 }}>
-            <FileText size={23} color="#FFF" />
+          <View style={{ backgroundColor: theme.destructive, padding: 9, borderRadius: 9 }}>
+            <FileText size={23} color={theme.card} />
           </View>
           <View style={{ flex: 1, gap: 3 }}>
             <Text numberOfLines={2} style={s.heading}>
@@ -53,7 +55,7 @@ export function FileThreadCard({ file }: { file: Artifact }) {
             </Text>
             <Text style={s.muted}>PDF</Text>
           </View>
-          <ChevronRight size={18} color={colors.muted} />
+          <ChevronRight size={18} color={theme.mutedForeground} />
         </View>
       </Card>
     </Pressable>

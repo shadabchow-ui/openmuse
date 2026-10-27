@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react-native";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
-import { Button, s } from "./ui";
+import { Button, makeStyles, useTheme } from "./ui";
 
 interface PdfReaderProps {
   url: string;
@@ -9,6 +9,8 @@ interface PdfReaderProps {
   pageCount: number;
 }
 export default function PdfReader({ url, pageCount }: PdfReaderProps) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(100);
   return (
@@ -44,7 +46,13 @@ export default function PdfReader({ url, pageCount }: PdfReaderProps) {
         key={`${page}:${zoom}`}
         title="PDF document reader"
         src={`${url}#page=${page}&zoom=${zoom}`}
-        style={{ height: 570, width: "100%", border: 0, borderRadius: 12, background: "#e7e9e3" }}
+        style={{
+          height: 570,
+          width: "100%",
+          border: 0,
+          borderRadius: 12,
+          background: theme.secondary,
+        }}
       />
       <Text style={s.small}>Use the reader toolbar to download or print a copy.</Text>
     </View>
