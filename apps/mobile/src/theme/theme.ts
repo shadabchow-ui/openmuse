@@ -34,6 +34,8 @@ export interface ThemeRoles {
   input: string;
   ring: string;
   link: string;
+  info: string;
+  scrim: string;
   /** Standalone saturated status text on default surfaces. */
   successText: string;
   /** Text on info/success/accent/warning wash surfaces. */
@@ -84,6 +86,8 @@ export const lightTheme: ThemeRoles = {
   input: "#EEEEF0", // colors.line
   ring: "#1473C8", // colors.blueDark
   link: "#1473C8", // colors.blueDark
+  info: "#EDF7FD", // colors.sky
+  scrim: "#11111361", // token light.scrim
   successText: "#248258", // fork run-status literal
   onInfo: TEXT,
   onSuccess: TEXT,
@@ -96,32 +100,34 @@ export const darkTheme: ThemeRoles = {
   background: tokenDark.background,
   foreground: tokenDark.foreground,
   card: tokenDark.card,
-  cardForeground: tokenDark.cardForeground,
+  cardForeground: tokenDark["card-foreground"],
   popover: tokenDark.popover,
-  popoverForeground: tokenDark.popoverForeground,
+  popoverForeground: tokenDark["popover-foreground"],
   primary: tokenDark.primary,
-  primaryForeground: tokenDark.primaryForeground,
+  primaryForeground: tokenDark["primary-foreground"],
   secondary: tokenDark.secondary,
-  secondaryForeground: tokenDark.secondaryForeground,
+  secondaryForeground: tokenDark["secondary-foreground"],
   muted: tokenDark.muted,
-  mutedForeground: tokenDark.mutedForeground,
+  mutedForeground: tokenDark["muted-foreground"],
   accent: tokenDark.accent,
-  accentForeground: tokenDark.accentForeground,
+  accentForeground: tokenDark["accent-foreground"],
   destructive: tokenDark.destructive,
-  destructiveForeground: tokenDark.destructiveForeground,
+  destructiveForeground: tokenDark["destructive-foreground"],
   success: tokenDark.success,
-  successForeground: tokenDark.successForeground,
+  successForeground: tokenDark["success-foreground"],
   warning: tokenDark.warning,
-  warningForeground: tokenDark.warningForeground,
+  warningForeground: tokenDark["warning-foreground"],
   border: tokenDark.border,
   input: tokenDark.input,
   ring: tokenDark.ring,
   link: tokenDark.link,
+  info: tokenDark.info,
+  scrim: tokenDark.scrim,
   successText: tokenDark.success,
-  onInfo: tokenDark.infoForeground,
-  onSuccess: tokenDark.successForeground,
-  onWarning: tokenDark.warningForeground,
-  onAccent: tokenDark.accentForeground,
+  onInfo: tokenDark["info-foreground"],
+  onSuccess: tokenDark["success-foreground"],
+  onWarning: tokenDark["warning-foreground"],
+  onAccent: tokenDark["accent-foreground"],
   scheme: "dark",
 };
 

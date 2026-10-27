@@ -1,8 +1,8 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { Text, View } from "react-native";
 import { startPlanResponseSchema } from "../../../packages/domain/src/muse-contract";
 import { parseProposal } from "./plan-proposal";
-import { Button, Card, colors, ErrorNotice, s } from "./ui";
+import { Button, Card, ErrorNotice, useTheme, makeStyles } from "./ui";
 import { useWorkspace } from "./workspace";
 
 /**
@@ -10,6 +10,8 @@ import { useWorkspace } from "./workspace";
  * "Start this mission" button exists nowhere else, and nothing in the tool output can add a control.
  */
 export function PlanCard({ result, loading }: { result: unknown; loading: boolean }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { api, refresh } = useWorkspace();
   const [busy, setBusy] = useState(false);
   const [started, setStarted] = useState(false);
@@ -72,7 +74,7 @@ export function PlanCard({ result, loading }: { result: unknown; loading: boolea
       </View>
       <ErrorNotice error={error} />
       {started ? (
-        <Text style={[s.text, { color: colors.text }]}>Started</Text>
+        <Text style={[s.text, { color: theme.foreground }]}>Started</Text>
       ) : (
         <Button primary busy={busy} disabled={!view.startable} onPress={() => void start()}>
           Start this mission

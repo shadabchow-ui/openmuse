@@ -1,11 +1,11 @@
 /** Development-only diagnostics: compatibility, session summary, streaming probe. */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Text, View } from "react-native";
 import { API_URL, apiPath, type MuseApi } from "../api";
 import { isLocalGatewayUrl, type NativeConfig } from "./config";
 import { nativeHeaders } from "./headers";
-import { Button, Card, ErrorNotice, s } from "../ui";
+import { Button, Card, ErrorNotice, useTheme, makeStyles } from "../ui";
 
 interface ProbeChunk {
   atMs: number;
@@ -72,6 +72,8 @@ export function Diagnostics({
   offline: boolean;
   pushStatus: string;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   if (!__DEV__) return null;
   const localOnly = isLocalGatewayUrl(cfg.apiUrl);
   const [compat, setCompat] = useState("");

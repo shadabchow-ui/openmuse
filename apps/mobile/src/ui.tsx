@@ -1,4 +1,5 @@
 import { ArrowUpRight, Check, ChevronRight, type LucideIcon, X } from "lucide-react-native";
+import { useMemo } from "react";
 import type { ReactNode } from "react";
 import {
   ActivityIndicator,
@@ -15,103 +16,112 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-export const colors = {
-  canvas: "#FCFCFC",
-  card: "#FFFFFF",
-  text: "#11191C",
-  muted: "#697176",
-  line: "#EEEEF0",
-  blue: "#C8E7FF",
-  blueDark: "#1473C8",
-  sky: "#EDF7FD",
-  green: "#E3F3E8",
-  lavender: "#F0EEFA",
-  orange: "#FDF0DF",
-  danger: "#AA4A45",
-};
-export const s = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center" },
-  between: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  text: { color: colors.text, fontSize: 15, lineHeight: 23 },
-  muted: { color: colors.muted, fontSize: 14, lineHeight: 21 },
-  small: { color: colors.muted, fontSize: 11, lineHeight: 17 },
-  label: {
-    color: colors.muted,
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 1.4,
-    textTransform: "uppercase",
-  },
-  title: { color: colors.text, fontSize: 23, fontWeight: "600", letterSpacing: -0.7 },
-  heading: { color: colors.text, fontSize: 16, fontWeight: "600", letterSpacing: -0.25 },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 23,
-    borderWidth: 0,
-    borderColor: colors.line,
-    padding: 20,
-  },
-  divider: { height: 1, backgroundColor: colors.line, marginVertical: 18 },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 19,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    color: colors.text,
-    fontSize: 16,
-    backgroundColor: "#FFF",
-    minHeight: 45,
-  },
-  field: { gap: 7, marginBottom: 16 },
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingHorizontal: 17,
-    minHeight: 42,
-    paddingVertical: 10,
-    borderRadius: 24,
-  },
-  primary: { backgroundColor: colors.blue },
-  secondary: { backgroundColor: "#F1F2F3" },
-  buttonText: { fontSize: 14, fontWeight: "600" },
-  chip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    alignSelf: "flex-start",
-    backgroundColor: colors.canvas,
-  },
-  chipText: { fontSize: 10, fontWeight: "600", color: colors.muted },
-  iconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 13,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.sky,
-  },
-  error: { padding: 16, borderRadius: 14, backgroundColor: "#FBEFED", marginVertical: 10, gap: 4 },
-  modalShade: {
-    flex: 1,
-    backgroundColor: "rgba(35,48,44,0.25)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  sheet: {
-    backgroundColor: colors.canvas,
-    borderRadius: 26,
-    width: "100%",
-    maxWidth: 790,
-    maxHeight: "94%",
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-});
+import { mascotPalette, type MascotVariant } from "./theme/artwork";
+import { lightTheme, type ThemeRoles } from "./theme/theme";
+
+/** Deprecated alias of the pre-theme static palette (see theme/legacy-colors). */
+export { colors } from "./theme/legacy-colors";
+import { useTheme as useThemeContext } from "./theme/ThemeProvider";
+
+export function useTheme(): ThemeRoles {
+  return useThemeContext().theme;
+}
+
+export type ChipTone = "info" | "success" | "accent" | "warning" | "destructive";
+
+/** Deprecated light snapshot for apps/mobile/App.tsx, which is outside this
+ *  job’s write set and cannot be converted here. In-set screens use the
+ *  hook form above; this snapshot keeps App-level screens on the exact old
+ *  light styles until the App.tsx conversion + provider mount land (needs a
+ *  header carve-out, recorded in docs/THEME.md). */
+export const s = makeStyles(lightTheme);
+
+export function makeStyles(theme: ThemeRoles) {
+  return StyleSheet.create({
+    row: { flexDirection: "row", alignItems: "center" },
+    between: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+    text: { color: theme.foreground, fontSize: 15, lineHeight: 23 },
+    muted: { color: theme.mutedForeground, fontSize: 14, lineHeight: 21 },
+    small: { color: theme.mutedForeground, fontSize: 11, lineHeight: 17 },
+    label: {
+      color: theme.mutedForeground,
+      fontSize: 10,
+      fontWeight: "700",
+      letterSpacing: 1.4,
+      textTransform: "uppercase",
+    },
+    title: { color: theme.foreground, fontSize: 23, fontWeight: "600", letterSpacing: -0.7 },
+    heading: { color: theme.foreground, fontSize: 16, fontWeight: "600", letterSpacing: -0.25 },
+    card: {
+      backgroundColor: theme.card,
+      borderRadius: 23,
+      borderWidth: 0,
+      borderColor: theme.border,
+      padding: 20,
+    },
+    divider: { height: 1, backgroundColor: theme.border, marginVertical: 18 },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 19,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      color: theme.foreground,
+      fontSize: 16,
+      backgroundColor: theme.card,
+      minHeight: 45,
+    },
+    field: { gap: 7, marginBottom: 16 },
+    button: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingHorizontal: 17,
+      minHeight: 42,
+      paddingVertical: 10,
+      borderRadius: 24,
+    },
+    primary: { backgroundColor: theme.primary },
+    secondary: { backgroundColor: theme.secondary },
+    buttonText: { fontSize: 14, fontWeight: "600" },
+    chip: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 20,
+      alignSelf: "flex-start",
+      backgroundColor: theme.background,
+    },
+    chipText: { fontSize: 10, fontWeight: "600", color: theme.mutedForeground },
+    iconBox: {
+      width: 42,
+      height: 42,
+      borderRadius: 13,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.info,
+    },
+    error: { padding: 16, borderRadius: 14, backgroundColor: theme.destructive, marginVertical: 10, gap: 4 },
+    modalShade: {
+      flex: 1,
+      backgroundColor: theme.scrim,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 20,
+    },
+    sheet: {
+      backgroundColor: theme.background,
+      borderRadius: 26,
+      width: "100%",
+      maxWidth: 790,
+      maxHeight: "94%",
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+  });
+}
+
 export function Button({
   children,
   onPress,
@@ -133,7 +143,9 @@ export function Button({
   danger?: boolean;
   style?: ViewStyle;
 }) {
-  const color = danger ? colors.danger : colors.text;
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
+  const color = danger ? theme.destructive : primary ? theme.primaryForeground : theme.foreground;
   return (
     <Pressable
       accessibilityRole="button"
@@ -167,6 +179,8 @@ export function IconButton({
   label: string;
   onPress: () => void;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <Pressable
       accessibilityRole="button"
@@ -179,30 +193,40 @@ export function IconButton({
           alignItems: "center",
           justifyContent: "center",
           borderRadius: 22,
-          backgroundColor: pressed ? colors.line : "#FFFFFF",
+          backgroundColor: pressed ? theme.border : theme.card,
         },
       ]}
     >
-      <Icon size={20} strokeWidth={1.8} color={colors.text} />
+      <Icon size={20} strokeWidth={1.8} color={theme.foreground} />
     </Pressable>
   );
 }
 export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return <View style={[s.card, style]}>{children}</View>;
 }
-export function Chip({ children, tint }: { children: ReactNode; tint?: string }) {
+export function Chip({ children, tone }: { children: ReactNode; tone?: ChipTone }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
+  let ink = theme.mutedForeground;
+  if (tone === "success") ink = theme.scheme === "dark" ? theme.onSuccess : theme.mutedForeground;
+  if (tone === "warning") ink = theme.scheme === "dark" ? theme.onWarning : theme.mutedForeground;
+  if (tone === "destructive") ink = theme.destructiveForeground;
   return (
-    <View style={[s.chip, tint ? { backgroundColor: tint } : null]}>
-      <Text style={s.chipText}>{children}</Text>
+    <View style={[s.chip, tone ? { backgroundColor: theme[tone] } : null]}>
+      <Text style={[s.chipText, { color: ink }]}>{children}</Text>
     </View>
   );
 }
 export function Field({ label, ...props }: TextInputProps & { label: string }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View style={s.field}>
-      <Text style={[s.small, { fontWeight: "600", color: colors.text }]}>{label}</Text>
+      <Text style={[s.small, { fontWeight: "600", color: theme.foreground }]}>{label}</Text>
       <TextInput
-        placeholderTextColor={colors.muted}
+        placeholderTextColor={theme.mutedForeground}
         accessibilityLabel={label}
         {...props}
         style={[
@@ -225,10 +249,12 @@ export function Empty({
   detail: string;
   children?: ReactNode;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View style={{ alignItems: "center", padding: 40, gap: 13 }}>
       <View style={[s.iconBox, { width: 55, height: 55, borderRadius: 18 }]}>
-        <Icon size={24} color={colors.blueDark} />
+        <Icon size={24} color={theme.link} />
       </View>
       <Text style={s.heading}>{title}</Text>
       <Text style={[s.muted, { textAlign: "center", maxWidth: 360 }]}>{detail}</Text>
@@ -237,9 +263,11 @@ export function Empty({
   );
 }
 export function ErrorNotice({ error }: { error?: string }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return error ? (
     <View accessibilityRole="alert" style={s.error}>
-      <Text style={[s.text, { color: colors.danger }]}>{error}</Text>
+      <Text style={[s.text, { color: theme.destructiveForeground }]}>{error}</Text>
     </View>
   ) : null;
 }
@@ -256,6 +284,8 @@ export function Sheet({
   onClose: () => void;
   wide?: boolean;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const compact = width < 600;
@@ -282,7 +312,7 @@ export function Sheet({
                 width: 34,
                 height: 4,
                 borderRadius: 3,
-                backgroundColor: "#D8DBDE",
+                backgroundColor: theme.border,
                 marginTop: 10,
               }}
             />
@@ -290,7 +320,7 @@ export function Sheet({
           <View
             style={[
               s.between,
-              { padding: compact ? 20 : 24, borderBottomWidth: 1, borderBottomColor: colors.line },
+              { padding: compact ? 20 : 24, borderBottomWidth: 1, borderBottomColor: theme.border },
             ]}
           >
             <View style={{ flex: 1, gap: 4 }}>
@@ -319,6 +349,8 @@ export function CheckRow({
   checked: boolean;
   onPress: () => void;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <Pressable
       accessibilityRole="checkbox"
@@ -332,13 +364,13 @@ export function CheckRow({
           height: 19,
           borderRadius: 5,
           borderWidth: 1,
-          borderColor: checked ? colors.text : colors.line,
-          backgroundColor: checked ? colors.text : "#FFF",
+          borderColor: checked ? theme.foreground : theme.border,
+          backgroundColor: checked ? theme.foreground : theme.card,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        {checked && <Check size={13} color="#FFF" />}
+        {checked && <Check size={13} color={theme.card} />}
       </View>
       <Text style={[s.text, { flex: 1 }]}>{label}</Text>
     </Pressable>
@@ -353,13 +385,15 @@ export function SectionHeading({
   action?: string;
   onPress?: () => void;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View style={[s.between, { marginBottom: 19 }]}>
       <Text style={s.heading}>{title}</Text>
       {action && onPress && (
         <Pressable accessibilityRole="button" onPress={onPress} style={[s.row, { gap: 5 }]}>
-          <Text style={[s.small, { color: colors.text }]}>{action}</Text>
-          <ArrowUpRight size={13} color={colors.muted} />
+          <Text style={[s.small, { color: theme.foreground }]}>{action}</Text>
+          <ArrowUpRight size={13} color={theme.mutedForeground} />
         </Pressable>
       )}
     </View>
@@ -370,14 +404,16 @@ export function LinkRow({
   detail,
   onPress,
   icon: Icon,
-  tint,
+  tone,
 }: {
   title: string;
   detail?: string;
   onPress: () => void;
   icon: LucideIcon;
-  tint?: string;
+  tone?: ChipTone;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <Pressable
       accessibilityRole="button"
@@ -385,17 +421,17 @@ export function LinkRow({
       style={({ pressed }) => [
         s.row,
         { paddingVertical: 13, gap: 14, borderRadius: 10 },
-        pressed && { backgroundColor: colors.canvas },
+        pressed && { backgroundColor: theme.background },
       ]}
     >
-      <View style={[s.iconBox, { backgroundColor: tint || colors.sky }]}>
-        <Icon size={19} color={colors.text} />
+      <View style={[s.iconBox, { backgroundColor: tone ? theme[tone] : theme.info }]}>
+        <Icon size={19} color={theme.foreground} />
       </View>
       <View style={{ flex: 1, gap: 3 }}>
         <Text style={[s.text, { fontWeight: "500" }]}>{title}</Text>
         {!!detail && <Text style={s.small}>{detail}</Text>}
       </View>
-      <ChevronRight size={15} color={colors.muted} />
+      <ChevronRight size={15} color={theme.mutedForeground} />
     </Pressable>
   );
 }
@@ -405,13 +441,9 @@ export function Mascot({
   variant = "sky",
 }: {
   size?: number;
-  variant?: "sky" | "sand" | "lilac";
+  variant?: MascotVariant;
 }) {
-  const palette = {
-    sky: "#ECF5FA",
-    sand: "#FAF0DF",
-    lilac: "#F1ECF9",
-  }[variant];
+  const palette = mascotPalette[variant];
   return (
     <View accessibilityLabel="OpenMuse capybara" style={{ width: size, height: size }}>
       <View

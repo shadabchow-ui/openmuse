@@ -1,9 +1,9 @@
 import { Check, Globe2, Hand, RotateCw } from "lucide-react-native";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, AppState, Image, Text, View } from "react-native";
 import { z } from "zod";
 import type { BrowserSession } from "../../../packages/domain/src";
-import { Button, Card, colors, ErrorNotice, s } from "./ui";
+import { Button, Card, ErrorNotice, useTheme, makeStyles } from "./ui";
 import { useWorkspace } from "./workspace";
 
 export const BrowserRunContext = createContext({ running: false, active: false });
@@ -42,6 +42,8 @@ export function BrowserToolCard({
   result: unknown;
   loading: boolean;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { api, workspace, open } = useWorkspace();
   const { running, active } = useContext(BrowserRunContext);
   const working = loading && active;
@@ -93,11 +95,11 @@ export function BrowserToolCard({
       : "";
   return (
     <Card
-      style={{ padding: 13, backgroundColor: "#EEEEF0", gap: 12, width: "100%", maxWidth: 440 }}
+      style={{ padding: 13, backgroundColor: theme.border, gap: 12, width: "100%", maxWidth: 440 }}
     >
       <View style={[s.row, { gap: 10 }]}>
         <View style={[s.iconBox, { width: 36, height: 36, borderRadius: 10 }]}>
-          <Globe2 size={21} color={colors.blueDark} />
+          <Globe2 size={21} color={theme.link} />
         </View>
         <View style={{ flex: 1, gap: 1 }}>
           <Text style={[s.text, { fontWeight: "600" }]}>Browser</Text>
@@ -112,21 +114,21 @@ export function BrowserToolCard({
           </Text>
         </View>
         {working ? (
-          <ActivityIndicator size="small" color={colors.blueDark} />
+          <ActivityIndicator size="small" color={theme.link} />
         ) : visited ? (
-          <Check size={17} color="#47896C" accessibilityLabel="Page read" />
+          <Check size={17} color={theme.successText} accessibilityLabel="Page read" />
         ) : null}
       </View>
       {preview ? (
         <Image
           accessibilityLabel={`Browser preview: ${visited?.title}`}
           source={{ uri: api.url(preview) }}
-          style={{ width: "100%", aspectRatio: 1.7, borderRadius: 12, backgroundColor: "#FFF" }}
+          style={{ width: "100%", aspectRatio: 1.7, borderRadius: 12, backgroundColor: theme.card }}
           resizeMode="contain"
           onError={() => setPreviewFailed(true)}
         />
       ) : (
-        <View style={{ backgroundColor: "#FAFAFB", borderRadius: 12, padding: 21, gap: 12 }}>
+        <View style={{ backgroundColor: theme.secondary, borderRadius: 12, padding: 21, gap: 12 }}>
           <Text numberOfLines={2} style={[s.text, { fontSize: 14 }]}>
             {visited?.title || siteLabel(url)}
           </Text>
@@ -135,7 +137,7 @@ export function BrowserToolCard({
               {(["90%", "74%", "84%"] as const).map((width) => (
                 <View
                   key={width}
-                  style={{ height: 7, width, borderRadius: 4, backgroundColor: "#E3E9ED" }}
+                  style={{ height: 7, width, borderRadius: 4, backgroundColor: theme.secondary }}
                 />
               ))}
             </View>
@@ -160,7 +162,7 @@ export function BrowserToolCard({
           icon={Hand}
           disabled={!browser || running}
           onPress={() => browser && open({ type: "browser", browser })}
-          style={{ backgroundColor: "#F9F9FA", minHeight: 38, paddingVertical: 8 }}
+          style={{ backgroundColor: theme.secondary, minHeight: 38, paddingVertical: 8 }}
         >
           Take control
         </Button>

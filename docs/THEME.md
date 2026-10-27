@@ -108,3 +108,19 @@ as literals in chrome code:
 - Finance-tracker card artwork: base `#080B10`, gradient `#281066` /
   `#163BBF` / `#148CE8`, copy `#D4DCFC`, tiles `#1D2025`, labels `#A4A7AD`,
   sub-labels `#7E8289`, saved amount `#58D3AE`.
+## App.tsx bridge (pending header carve-out)
+
+`apps/mobile/App.tsx` is outside this job`s write set, so it is not
+converted and the provider is not mounted in production in this job:
+
+- `apps/mobile/src/ui.tsx` keeps a deprecated light `s` snapshot
+  (`makeStyles(lightTheme)`) so App-level screens render exactly as before.
+  In-set screens use the hook form. The snapshot is removed when App.tsx is
+  converted.
+- The deprecated `colors` alias is re-exported from `ui.tsx`, so App.tsx`s
+  existing `colors.` references keep working; no new `colors.` reference was
+  added by this job (remaining ones are all in App.tsx).
+- Production mount (follow-up, needs an `apps/mobile/App.tsx` carve-out):
+  wrap the tree in `<ThemeProvider>` in App.tsx and convert its ~30 theme
+  references the same way. Until then the app renders the light scheme and
+  dark is proven by the harness in step 7, which mounts the provider.

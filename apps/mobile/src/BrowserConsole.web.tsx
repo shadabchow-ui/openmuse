@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+import { makeStyles, useTheme } from "./ui";
 export default function BrowserConsole({
   url,
   title = "Remote browser session console",
@@ -7,13 +9,15 @@ export default function BrowserConsole({
   title?: string;
   sandboxed?: boolean;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <iframe
       title={title}
       src={url}
       sandbox={sandboxed ? "allow-scripts allow-same-origin allow-pointer-lock" : undefined}
       referrerPolicy={sandboxed ? "no-referrer" : undefined}
-      style={{ height: 540, width: "100%", border: 0, borderRadius: 12, background: "#FFF" }}
+      style={{ height: 540, width: "100%", border: 0, borderRadius: 12, background: theme.card }}
     />
   );
 }

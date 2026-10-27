@@ -1,9 +1,9 @@
 import { Search } from "lucide-react-native";
-import { useContext, useState } from "react";
+import { useContext, useState, useMemo } from "react";
 import { ActivityIndicator, Linking, Text, View } from "react-native";
 import { z } from "zod";
 import { BrowserRunContext } from "./browser-tool-card";
-import { Card, colors, ErrorNotice, s } from "./ui";
+import { Card, ErrorNotice, useTheme, makeStyles } from "./ui";
 
 const resultSchema = z.object({
   results: z.array(z.object({ url: z.url({ protocol: /^https?$/ }), title: z.string().nullish() })),
@@ -12,6 +12,8 @@ const resultSchema = z.object({
 });
 
 export function SearchToolCard({ result, loading }: { result: unknown; loading: boolean }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { active } = useContext(BrowserRunContext);
   const [linkError, setLinkError] = useState("");
   let value = result;
@@ -36,13 +38,13 @@ export function SearchToolCard({ result, loading }: { result: unknown; loading: 
   const count = sources.length;
   return (
     <Card
-      style={{ padding: 14, gap: 10, backgroundColor: "#EEEEF0", maxWidth: 440, width: "100%" }}
+      style={{ padding: 14, gap: 10, backgroundColor: theme.border, maxWidth: 440, width: "100%" }}
     >
       <View style={[s.row, { gap: 10 }]}>
         {working ? (
-          <ActivityIndicator size="small" color={colors.blueDark} />
+          <ActivityIndicator size="small" color={theme.link} />
         ) : (
-          <Search size={18} color={colors.blueDark} />
+          <Search size={18} color={theme.link} />
         )}
         <Text style={s.text}>
           {failure
@@ -62,7 +64,7 @@ export function SearchToolCard({ result, loading }: { result: unknown; loading: 
             <Text
               key={source.url}
               accessibilityRole="link"
-              style={[s.text, { color: colors.blueDark }]}
+              style={[s.text, { color: theme.link }]}
               onPress={() => {
                 setLinkError("");
                 void Linking.openURL(source.url).catch(() =>

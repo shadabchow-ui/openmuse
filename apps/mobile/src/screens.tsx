@@ -20,7 +20,7 @@ import {
   Sparkles,
   Upload,
 } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -41,24 +41,8 @@ import type {
 import { API_URL, apiPath } from "./api";
 import { browserAddress } from "./browser-address";
 import { localDateTime, startOfZonedDay, zonedInstant } from "./date-time";
-import {
-  Button,
-  Card,
-  Chip,
-  colors,
-  dateLabel,
-  Empty,
-  ErrorNotice,
-  IconButton,
-  LinkRow,
-  Mascot,
-  relativeDate,
-  resultSummary,
-  SectionHeading,
-  Sheet,
-  s,
-  timeLabel,
-} from "./ui";
+import { Button, Card, Chip, dateLabel, Empty, ErrorNotice, IconButton, LinkRow, Mascot, relativeDate, resultSummary, SectionHeading, Sheet, timeLabel, useTheme, makeStyles } from "./ui";
+import { connectionBrands } from "./theme/artwork";
 import { useWorkspace } from "./workspace";
 
 function todayDate() {
@@ -69,6 +53,8 @@ function eventDate(event: CalendarEvent) {
   return event.allDay ? event.start : localDateTime(event.start, event.timeZone).date;
 }
 export function TodayScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, navigate, open, ask } = useWorkspace();
   const wide = useWindowDimensions().width > 1180;
   const pending = w.actions.filter((a) => a.status === "awaiting_review");
@@ -82,7 +68,7 @@ export function TodayScreen() {
       <View
         style={[
           {
-            backgroundColor: "#E8F2F8",
+            backgroundColor: theme.info,
             borderRadius: 24,
             padding: 32,
             minHeight: 228,
@@ -93,8 +79,8 @@ export function TodayScreen() {
       >
         <View style={{ flex: 1, gap: 15, zIndex: 1 }}>
           <View style={[s.row, { gap: 7 }]}>
-            <Sparkles size={13} color={colors.blueDark} />
-            <Text style={[s.label, { color: colors.blueDark }]}>A little clarity, every day</Text>
+            <Sparkles size={13} color={theme.link} />
+            <Text style={[s.label, { color: theme.link }]}>A little clarity, every day</Text>
           </View>
           <Text
             style={{
@@ -102,12 +88,12 @@ export function TodayScreen() {
               lineHeight: wide ? 45 : 36,
               letterSpacing: -1.7,
               fontWeight: "500",
-              color: colors.text,
+              color: theme.foreground,
             }}
           >
             Your day, with a little{"\n"}more room to breathe.
           </Text>
-          <Text style={[s.muted, { maxWidth: 420, color: "#617680" }]}>
+          <Text style={[s.muted, { maxWidth: 420, color: theme.mutedForeground }]}>
             {events.length ? `${events.length} things on your calendar` : "Your calendar has room"}
             {unread.length ? `, ${unread.length} unread emails` : ""}.{"\n"}Let’s make space for
             what matters.
@@ -129,7 +115,7 @@ export function TodayScreen() {
                 width: 190,
                 height: 190,
                 borderRadius: 100,
-                backgroundColor: "#DAEAF2",
+                backgroundColor: theme.info,
               }}
             />
             <View
@@ -139,7 +125,7 @@ export function TodayScreen() {
                 height: 145,
                 borderRadius: 80,
                 borderWidth: 1,
-                borderColor: "#C8DBE6",
+                borderColor: theme.border,
               }}
             />
             <Mascot size={94} />
@@ -152,13 +138,13 @@ export function TodayScreen() {
                   left: -19,
                   padding: 11,
                   gap: 7,
-                  backgroundColor: "#FFF",
+                  backgroundColor: theme.card,
                   borderRadius: 13,
                   transform: [{ rotate: "-7deg" }],
                 },
               ]}
             >
-              <Check size={14} color="#739174" />
+              <Check size={14} color={theme.successText} />
               <Text style={s.small}>A lighter day</Text>
             </View>
             <View
@@ -170,13 +156,13 @@ export function TodayScreen() {
                   right: -8,
                   padding: 12,
                   gap: 8,
-                  backgroundColor: "#FFF",
+                  backgroundColor: theme.card,
                   borderRadius: 13,
                   transform: [{ rotate: "5deg" }],
                 },
               ]}
             >
-              <CalendarDays size={17} color={colors.blueDark} />
+              <CalendarDays size={17} color={theme.link} />
               <Text style={s.small}>Everything, together</Text>
             </View>
           </View>
@@ -190,7 +176,7 @@ export function TodayScreen() {
             note: "A fresh look at your inbox",
             icon: Mail,
             section: "mail" as const,
-            tint: colors.sky,
+            tint: theme.info,
           },
           {
             label: "ON THE CALENDAR",
@@ -198,7 +184,7 @@ export function TodayScreen() {
             note: "Make room for your priorities",
             icon: CalendarDays,
             section: "calendar" as const,
-            tint: colors.green,
+            tint: theme.success,
           },
           {
             label: "WAITING FOR YOU",
@@ -206,7 +192,7 @@ export function TodayScreen() {
             note: "Your review keeps things moving",
             icon: ShieldCheck,
             section: "activity" as const,
-            tint: colors.lavender,
+            tint: theme.accent,
           },
         ].map((item) => (
           <Pressable
@@ -224,10 +210,10 @@ export function TodayScreen() {
                     { width: 31, height: 31, borderRadius: 10, backgroundColor: item.tint },
                   ]}
                 >
-                  <item.icon size={15} color={colors.text} />
+                  <item.icon size={15} color={theme.foreground} />
                 </View>
               </View>
-              <Text style={{ fontSize: 29, color: colors.text, letterSpacing: -1, marginTop: -2 }}>
+              <Text style={{ fontSize: 29, color: theme.foreground, letterSpacing: -1, marginTop: -2 }}>
                 {String(item.value).padStart(2, "0")}
               </Text>
               <Text style={[s.small, { fontSize: 10, marginTop: 3 }]}>{item.note}</Text>
@@ -260,11 +246,11 @@ export function TodayScreen() {
                 paddingTop: 15,
                 marginTop: 9,
                 borderTopWidth: 1,
-                borderTopColor: colors.line,
+                borderTopColor: theme.border,
               },
             ]}
           >
-            <Plus size={15} color={colors.muted} />
+            <Plus size={15} color={theme.mutedForeground} />
             <Text style={s.small}>Make time for something</Text>
           </Pressable>
         </Card>
@@ -285,7 +271,7 @@ export function TodayScreen() {
                     gap: 12,
                     paddingVertical: 13,
                     borderTopWidth: i ? 1 : 0,
-                    borderTopColor: colors.line,
+                    borderTopColor: theme.border,
                   },
                 ]}
               >
@@ -304,7 +290,7 @@ export function TodayScreen() {
                 </View>
                 {m.unread && (
                   <View
-                    style={{ width: 5, height: 5, borderRadius: 4, backgroundColor: "#78ABD0" }}
+                    style={{ width: 5, height: 5, borderRadius: 4, backgroundColor: theme.link }}
                   />
                 )}
               </Pressable>
@@ -319,7 +305,7 @@ export function TodayScreen() {
         </Card>
       </View>
       <View style={{ flexDirection: wide ? "row" : "column", gap: 22 }}>
-        <Card style={{ flex: 1, backgroundColor: "#F0F0E7" }}>
+        <Card style={{ flex: 1, backgroundColor: theme.secondary }}>
           <SectionHeading title="A hand with the little things" />
           <Text style={[s.muted, { marginBottom: 15 }]}>
             Start with a thought. We’ll take it from there.
@@ -334,11 +320,11 @@ export function TodayScreen() {
               onPress={() => ask(prompt)}
               style={[
                 s.between,
-                { borderTopWidth: 1, borderTopColor: "#E1E2D9", paddingVertical: 13 },
+                { borderTopWidth: 1, borderTopColor: theme.border, paddingVertical: 13 },
               ]}
             >
               <Text style={[s.text, { fontSize: 12 }]}>{prompt}</Text>
-              <ArrowUpRight size={15} color={colors.muted} />
+              <ArrowUpRight size={15} color={theme.mutedForeground} />
             </Pressable>
           ))}
         </Card>
@@ -358,15 +344,15 @@ export function TodayScreen() {
                     detail="Prepared · waiting for your approval"
                     onPress={() => open({ type: "review", action: a })}
                     icon={ShieldCheck}
-                    tint={colors.lavender}
+                    tone="accent"
                   />
                 ))
             : w.activity.slice(0, 3).map((a) => (
                 <View key={a.id} style={[s.row, { gap: 13, paddingVertical: 12 }]}>
                   <View
-                    style={[s.iconBox, { width: 32, height: 32, backgroundColor: colors.green }]}
+                    style={[s.iconBox, { width: 32, height: 32, backgroundColor: theme.success }]}
                   >
-                    <Check size={14} color={colors.text} />
+                    <Check size={14} color={theme.foreground} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[s.text, { fontSize: 12 }]}>{a.title}</Text>
@@ -385,18 +371,20 @@ export function TodayScreen() {
   );
 }
 function Avatar({ name, index = 0 }: { name: string; index?: number }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View
       style={{
         width: 35,
         height: 35,
         borderRadius: 12,
-        backgroundColor: [colors.orange, colors.lavender, colors.green, colors.sky][index % 4],
+        backgroundColor: [theme.warning, theme.accent, theme.success, theme.info][index % 4],
         justifyContent: "center",
         alignItems: "center",
       }}
     >
-      <Text style={{ color: colors.text, fontSize: 11, fontWeight: "500" }}>
+      <Text style={{ color: theme.foreground, fontSize: 11, fontWeight: "500" }}>
         {name
           .split(" ")
           .map((p) => p[0])
@@ -415,6 +403,8 @@ export function AgendaRow({
   index?: number;
   neighbors?: CalendarEvent[];
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { open } = useWorkspace();
   return (
     <Pressable
@@ -434,7 +424,7 @@ export function AgendaRow({
           width: 3,
           height: 42,
           borderRadius: 4,
-          backgroundColor: ["#BCDAEB", "#C7D6AB", "#D9CDEA"][index % 3],
+          backgroundColor: [theme.info, theme.success, theme.accent][index % 3],
         }}
       />
       <View style={{ flex: 1, gap: 3 }}>
@@ -443,11 +433,13 @@ export function AgendaRow({
           {e.location || (e.attendees.length ? `${e.attendees.length} attendees` : "Time for you")}
         </Text>
       </View>
-      <ChevronRight size={14} color={colors.muted} />
+      <ChevronRight size={14} color={theme.mutedForeground} />
     </Pressable>
   );
 }
 export function MailScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, api, open } = useWorkspace();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("all");
@@ -486,22 +478,22 @@ export function MailScreen() {
               gap: 9,
               flex: 1,
               minWidth: 200,
-              backgroundColor: "#FFF",
+              backgroundColor: theme.card,
               borderWidth: 1,
-              borderColor: colors.line,
+              borderColor: theme.border,
               borderRadius: 12,
               paddingHorizontal: 14,
             },
           ]}
         >
-          <Search size={16} color={colors.muted} />
+          <Search size={16} color={theme.mutedForeground} />
           <TextInput
             accessibilityLabel="Search mail"
             placeholder="Search your inbox"
-            placeholderTextColor={colors.muted}
+            placeholderTextColor={theme.mutedForeground}
             value={query}
             onChangeText={setQuery}
-            style={{ flex: 1, paddingVertical: 13, fontSize: 13, color: colors.text }}
+            style={{ flex: 1, paddingVertical: 13, fontSize: 13, color: theme.foreground }}
           />
         </View>
         <Button onPress={() => open({ type: "email" })} primary icon={Plus}>
@@ -546,7 +538,7 @@ export function MailScreen() {
               onPress={() => open({ type: "mail", mail: m })}
               style={[
                 s.row,
-                { gap: 15, paddingVertical: 20, borderTopWidth: 1, borderTopColor: colors.line },
+                { gap: 15, paddingVertical: 20, borderTopWidth: 1, borderTopColor: theme.border },
               ]}
             >
               <Avatar name={m.sender} index={i} />
@@ -561,7 +553,7 @@ export function MailScreen() {
                 </Text>
                 {!!m.attachments.length && (
                   <View style={[s.row, { gap: 4, marginTop: 2 }]}>
-                    <FileText size={12} color={colors.muted} />
+                    <FileText size={12} color={theme.mutedForeground} />
                     <Text style={s.small}>
                       {m.attachments.length} attachment{m.attachments.length > 1 ? "s" : ""}
                     </Text>
@@ -570,7 +562,7 @@ export function MailScreen() {
               </View>
               {m.unread && (
                 <View
-                  style={{ width: 6, height: 6, borderRadius: 4, backgroundColor: "#83B5D3" }}
+                  style={{ width: 6, height: 6, borderRadius: 4, backgroundColor: theme.link }}
                 />
               )}
             </Pressable>
@@ -602,6 +594,8 @@ function plusDays(date: string, days: number) {
   return value.toISOString().slice(0, 10);
 }
 export function CalendarScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, api, open } = useWorkspace();
   const [date, setDate] = useState(todayDate());
   const [all, setAll] = useState(false);
@@ -744,14 +738,14 @@ export function CalendarScreen() {
                   paddingVertical: 17,
                   gap: 9,
                   borderRadius: 14,
-                  backgroundColor: key === date ? colors.sky : "transparent",
+                  backgroundColor: key === date ? theme.info : "transparent",
                 }}
               >
                 <Text style={s.small}>{day.toLocaleDateString("en-US", { weekday: "short" })}</Text>
                 <Text
                   style={[
                     s.title,
-                    { fontSize: 22, color: key === date ? colors.blueDark : colors.text },
+                    { fontSize: 22, color: key === date ? theme.link : theme.foreground },
                   ]}
                 >
                   {day.getDate()}
@@ -764,7 +758,7 @@ export function CalendarScreen() {
                     backgroundColor: [...events, ...w.events].some(
                       (e) => e.calendarId === calendarId && eventDate(e) === key,
                     )
-                      ? "#8DB6CA"
+                      ? theme.link
                       : "transparent",
                   }}
                 />
@@ -795,7 +789,7 @@ export function CalendarScreen() {
         )}
         {loading ? (
           <View style={[s.row, { gap: 10, paddingVertical: 35, justifyContent: "center" }]}>
-            <ActivityIndicator size="small" color={colors.blueDark} />
+            <ActivityIndicator size="small" color={theme.link} />
             <Text style={s.muted}>Checking your calendar…</Text>
           </View>
         ) : events.length ? (
@@ -830,6 +824,8 @@ export function CalendarScreen() {
   );
 }
 export function BrowserScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, api, refresh, open } = useWorkspace();
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -852,9 +848,9 @@ export function BrowserScreen() {
   }
   return (
     <View style={{ gap: 22 }}>
-      <Card style={{ backgroundColor: colors.sky }}>
+      <Card style={{ backgroundColor: theme.info }}>
         <View style={[s.row, { gap: 12, marginBottom: 15 }]}>
-          <Globe2 size={22} color={colors.blueDark} />
+          <Globe2 size={22} color={theme.link} />
           <View>
             <Text style={s.heading}>A place for your open tabs</Text>
             <Text style={s.muted}>Browse in a private, persistent workspace session.</Text>
@@ -868,7 +864,7 @@ export function BrowserScreen() {
             onSubmitEditing={() => void create()}
             autoCapitalize="none"
             placeholder="https://example.com"
-            placeholderTextColor={colors.muted}
+            placeholderTextColor={theme.mutedForeground}
             style={[s.input, { flex: 1 }]}
           />
           <Button
@@ -892,14 +888,14 @@ export function BrowserScreen() {
               onPress={() => open({ type: "browser", browser: b })}
               style={{
                 borderTopWidth: 1,
-                borderTopColor: colors.line,
+                borderTopColor: theme.border,
                 paddingVertical: 20,
                 gap: 12,
               }}
             >
               <View style={[s.row, { gap: 14 }]}>
                 <View style={s.iconBox}>
-                  <Globe2 size={20} color={colors.blueDark} />
+                  <Globe2 size={20} color={theme.link} />
                 </View>
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={s.heading}>{b.title || "Browser session"}</Text>
@@ -907,8 +903,8 @@ export function BrowserScreen() {
                     {b.url}
                   </Text>
                 </View>
-                <Chip tint={b.status === "active" ? colors.green : colors.canvas}>{b.status}</Chip>
-                <ArrowUpRight size={17} color={colors.muted} />
+                <Chip tone={b.status === "active" ? "success" : undefined}>{b.status}</Chip>
+                <ArrowUpRight size={17} color={theme.mutedForeground} />
               </View>
               {!!b.previewUrl && (
                 <Image
@@ -918,7 +914,7 @@ export function BrowserScreen() {
                     height: 180,
                     width: "100%",
                     borderRadius: 12,
-                    backgroundColor: colors.canvas,
+                    backgroundColor: theme.background,
                   }}
                 />
               )}
@@ -936,6 +932,8 @@ export function BrowserScreen() {
   );
 }
 export function FilesScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, api, refresh, open } = useWorkspace();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -1003,7 +1001,7 @@ export function FilesScreen() {
               <View
                 style={{
                   height: 175,
-                  backgroundColor: "#EDEFEA",
+                  backgroundColor: theme.secondary,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -1013,23 +1011,23 @@ export function FilesScreen() {
                     width: 93,
                     height: 121,
                     borderRadius: 5,
-                    backgroundColor: "#FFF",
+                    backgroundColor: theme.card,
                     padding: 14,
                     transform: [{ rotate: "-4deg" }],
                     borderWidth: 1,
-                    borderColor: "#DDE3DD",
+                    borderColor: theme.border,
                   }}
                 >
                   <View style={[s.row, { gap: 5, marginBottom: 15 }]}>
-                    <FileText size={13} color={colors.blueDark} />
-                    <Text style={{ fontSize: 7, color: colors.blueDark }}>DOCUMENT</Text>
+                    <FileText size={13} color={theme.link} />
+                    <Text style={{ fontSize: 7, color: theme.link }}>DOCUMENT</Text>
                   </View>
                   {[100, 75, 90, 95, 60].map((width, i) => (
                     <View
                       key={width}
                       style={{
                         height: 3,
-                        backgroundColor: i === 0 ? "#A4BED0" : "#E3E7E3",
+                        backgroundColor: i === 0 ? theme.mutedForeground : theme.muted,
                         width: `${width}%`,
                         marginBottom: 7,
                         borderRadius: 3,
@@ -1071,6 +1069,8 @@ export function FilesScreen() {
   );
 }
 export function ActivityScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, open } = useWorkspace();
   const [filter, setFilter] = useState("all");
   const pending = w.actions.filter((a) => a.status === "awaiting_review");
@@ -1094,7 +1094,7 @@ export function ActivityScreen() {
               onPress={() => open({ type: "review", action: a })}
               style={[
                 s.row,
-                { gap: 15, paddingVertical: 17, borderTopWidth: 1, borderTopColor: colors.line },
+                { gap: 15, paddingVertical: 17, borderTopWidth: 1, borderTopColor: theme.border },
               ]}
             >
               <View
@@ -1102,14 +1102,14 @@ export function ActivityScreen() {
                   s.iconBox,
                   {
                     backgroundColor:
-                      a.status === "awaiting_review" ? colors.lavender : colors.green,
+                      a.status === "awaiting_review" ? theme.accent : theme.success,
                   },
                 ]}
               >
                 {a.status === "awaiting_review" ? (
-                  <ShieldCheck size={18} color={colors.text} />
+                  <ShieldCheck size={18} color={theme.foreground} />
                 ) : (
-                  <CheckCheck size={18} color={colors.text} />
+                  <CheckCheck size={18} color={theme.foreground} />
                 )}
               </View>
               <View style={{ flex: 1, gap: 4 }}>
@@ -1117,17 +1117,17 @@ export function ActivityScreen() {
                 <Text style={s.small}>{relativeDate(a.createdAt)}</Text>
               </View>
               <Chip
-                tint={
+                tone={
                   a.status === "failed"
-                    ? "#FBEFED"
+                    ? "destructive"
                     : a.status === "awaiting_review"
-                      ? colors.lavender
-                      : colors.canvas
+                      ? "accent"
+                      : undefined
                 }
               >
                 {a.status.replace(/_/g, " ")}
               </Chip>
-              <ChevronRight size={16} color={colors.muted} />
+              <ChevronRight size={16} color={theme.mutedForeground} />
             </Pressable>
           ))}
         </Card>
@@ -1146,14 +1146,14 @@ export function ActivityScreen() {
                     gap: 17,
                     paddingVertical: 18,
                     borderTopWidth: i ? 1 : 0,
-                    borderTopColor: colors.line,
+                    borderTopColor: theme.border,
                   },
                 ]}
               >
                 <View
-                  style={[s.iconBox, { height: 34, width: 34, backgroundColor: colors.canvas }]}
+                  style={[s.iconBox, { height: 34, width: 34, backgroundColor: theme.background }]}
                 >
-                  <Clock3 size={16} color={colors.muted} />
+                  <Clock3 size={16} color={theme.mutedForeground} />
                 </View>
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={s.text}>{a.title}</Text>
@@ -1187,6 +1187,8 @@ export function ActivityScreen() {
   );
 }
 export function ConnectionsScreen({ query = "" }: { query?: string }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace: w, api, refresh, notify, open } = useWorkspace();
   const [selected, setSelected] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -1228,12 +1230,12 @@ export function ConnectionsScreen({ query = "" }: { query?: string }) {
   const google = w.connections.find((c) => c.id === "google");
   const connected = google?.status === "connected" || google?.status === "sample";
   const rows = [
-    { id: "gmail", name: "Gmail", icon: Mail, color: "#EA5B4D", connected, group: "google" },
+    { id: "gmail", name: "Gmail", icon: Mail, color: connectionBrands.gmail, connected, group: "google" },
     {
       id: "calendar",
       name: "Google Calendar",
       icon: CalendarDays,
-      color: "#4285F4",
+      color: connectionBrands.calendar,
       connected,
       group: "google",
     },
@@ -1241,7 +1243,7 @@ export function ConnectionsScreen({ query = "" }: { query?: string }) {
       id: "browser",
       name: "Agent computer",
       icon: Globe2,
-      color: "#1987CF",
+      color: connectionBrands.browser,
       connected: w.connections.some((c) => c.id === "browser" && c.status === "connected"),
       group: "browser",
     },
@@ -1249,7 +1251,7 @@ export function ConnectionsScreen({ query = "" }: { query?: string }) {
       id: "openbot",
       name: "OpenBot",
       icon: Sparkles,
-      color: "#6866A6",
+      color: connectionBrands.openbot,
       connected: false,
       group: "openbot",
     },
@@ -1268,7 +1270,7 @@ export function ConnectionsScreen({ query = "" }: { query?: string }) {
                   : "Connected"
                 : "Available integrations"}
             </Text>
-            <View style={{ paddingHorizontal: 16, borderRadius: 23, backgroundColor: "#F3F4F5" }}>
+            <View style={{ paddingHorizontal: 16, borderRadius: 23, backgroundColor: theme.secondary }}>
               {group.map((row, index) => (
                 <Pressable
                   key={row.id}
@@ -1283,7 +1285,7 @@ export function ConnectionsScreen({ query = "" }: { query?: string }) {
                       gap: 14,
                       minHeight: 61,
                       borderBottomWidth: index < group.length - 1 ? 1 : 0,
-                      borderBottomColor: "#E5E7E9",
+                      borderBottomColor: theme.border,
                     },
                   ]}
                 >
@@ -1292,7 +1294,7 @@ export function ConnectionsScreen({ query = "" }: { query?: string }) {
                       width: 29,
                       height: 29,
                       borderRadius: 7,
-                      backgroundColor: "#FFF",
+                      backgroundColor: theme.card,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
@@ -1304,12 +1306,12 @@ export function ConnectionsScreen({ query = "" }: { query?: string }) {
                     <Text style={s.small}>Local data</Text>
                   )}
                   {row.connected ? (
-                    <ChevronRight size={18} color="#A4A7AA" />
+                    <ChevronRight size={18} color={theme.mutedForeground} />
                   ) : (
                     <Text
                       style={{
                         fontSize: 13,
-                        color: row.group === "google" ? colors.blueDark : colors.muted,
+                        color: row.group === "google" ? theme.link : theme.mutedForeground,
                       }}
                     >
                       {row.group === "google" ? "Connect" : "Setup"}
@@ -1395,11 +1397,13 @@ export function ConnectionsScreen({ query = "" }: { query?: string }) {
   );
 }
 function SettingsLine({ label, value }: { label: string; value: string }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View
       style={[
         s.between,
-        { gap: 15, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.line },
+        { gap: 15, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.border },
       ]}
     >
       <Text style={s.muted}>{label}</Text>

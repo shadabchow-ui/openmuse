@@ -1,7 +1,8 @@
 /** In-app push prompt: permission is requested only when the person turns it on. */
 
+import { useMemo } from "react";
 import { Text, View } from "react-native";
-import { Button, Card, s } from "../ui";
+import { Button, Card, useTheme, makeStyles } from "../ui";
 
 export function PushPrompt({
   onTurnOn,
@@ -12,6 +13,8 @@ export function PushPrompt({
   onNotNow: () => void;
   busy?: boolean;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View style={{ paddingHorizontal: 22, paddingBottom: 8 }}>
       <Card>

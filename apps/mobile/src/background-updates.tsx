@@ -1,11 +1,13 @@
 import { ArrowRight, Bell, X } from "lucide-react-native";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAgentWorkspace } from "./agent-workspace";
-import { Button, Card, colors, ErrorNotice, resultSummary, s } from "./ui";
+import { Button, Card, ErrorNotice, resultSummary, useTheme, makeStyles } from "./ui";
 import { useWorkspace } from "./workspace";
 
 export function BackgroundUpdates() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { data, mutate } = useAgentWorkspace();
   const { open } = useWorkspace();
   const [error, setError] = useState("");
@@ -26,10 +28,10 @@ export function BackgroundUpdates() {
     }
   }
   return (
-    <Card style={{ backgroundColor: colors.sky, padding: 16, gap: 10 }}>
+    <Card style={{ backgroundColor: theme.info, padding: 16, gap: 10 }}>
       <View style={[s.between, { gap: 12 }]}>
         <View style={[s.row, { gap: 7 }]}>
-          <Bell size={14} color={colors.blueDark} />
+          <Bell size={14} color={theme.link} />
           <Text style={s.small}>An update for you</Text>
         </View>
         <Pressable
@@ -40,7 +42,7 @@ export function BackgroundUpdates() {
           hitSlop={10}
           style={{ padding: 6 }}
         >
-          <X size={16} color={colors.muted} />
+          <X size={16} color={theme.mutedForeground} />
         </Pressable>
       </View>
       <Text style={s.heading}>{update.title}</Text>

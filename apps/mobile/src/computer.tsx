@@ -7,7 +7,7 @@ import {
   RefreshCw,
   Terminal,
 } from "lucide-react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { AppState, Image, Pressable, Text, View } from "react-native";
 import type { BrowserSession } from "../../../packages/domain/src";
 import type { ComputerSnapshot } from "../../../packages/domain/src/computer";
@@ -15,10 +15,12 @@ import { browserAddress } from "./browser-address";
 import { useComputerDraft } from "./computer-drafts";
 import { computerStatus } from "./computer-status";
 import { LinuxWorkspace } from "./computer-workspace";
-import { Button, Card, colors, ErrorNotice, Field, LinkRow, Sheet, s } from "./ui";
+import { Button, Card, ErrorNotice, Field, LinkRow, Sheet, useTheme, makeStyles } from "./ui";
 import { useWorkspace } from "./workspace";
 
 export function ComputerEntry() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace, open } = useWorkspace();
   const available = workspace.connections.some(
     (c) => c.id === "browser" && c.status === "connected",
@@ -38,24 +40,26 @@ export function ComputerEntry() {
           paddingHorizontal: 12,
           paddingVertical: 7,
           borderRadius: 20,
-          backgroundColor: "#F1F3F4",
+          backgroundColor: theme.secondary,
         },
       ]}
     >
-      <Monitor size={13} color={colors.muted} />
-      <Text style={{ fontSize: 12, color: colors.muted }}>Computer · {status}</Text>
+      <Monitor size={13} color={theme.mutedForeground} />
+      <Text style={{ fontSize: 12, color: theme.mutedForeground }}>Computer · {status}</Text>
       <View
         style={{
           width: 5,
           height: 5,
           borderRadius: 3,
-          backgroundColor: available ? "#57AD85" : "#ACB0B5",
+          backgroundColor: available ? theme.successText : theme.mutedForeground,
         }}
       />
     </Pressable>
   );
 }
 export function BrowserThreadCard({ browser }: { browser: BrowserSession }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { open } = useWorkspace();
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -63,11 +67,11 @@ export function BrowserThreadCard({ browser }: { browser: BrowserSession }) {
   }, [browser.previewUrl, browser.updatedAt]);
   return (
     <Card
-      style={{ padding: 13, backgroundColor: "#EEEEF0", gap: 12, maxWidth: 440, width: "100%" }}
+      style={{ padding: 13, backgroundColor: theme.border, gap: 12, maxWidth: 440, width: "100%" }}
     >
       <View style={[s.row, { gap: 10 }]}>
         <View style={[s.iconBox, { width: 36, height: 36, borderRadius: 9 }]}>
-          <Globe2 size={21} color={colors.blueDark} />
+          <Globe2 size={21} color={theme.link} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[s.text, { fontWeight: "600" }]}>Browser</Text>
@@ -84,7 +88,7 @@ export function BrowserThreadCard({ browser }: { browser: BrowserSession }) {
         <Image
           accessibilityLabel={`Browser preview: ${browser.title}`}
           source={{ uri: browser.previewUrl }}
-          style={{ width: "100%", aspectRatio: 1.6, borderRadius: 11, backgroundColor: "#FFF" }}
+          style={{ width: "100%", aspectRatio: 1.6, borderRadius: 11, backgroundColor: theme.card }}
           resizeMode="contain"
           onError={() => setFailed(true)}
         />
@@ -93,12 +97,12 @@ export function BrowserThreadCard({ browser }: { browser: BrowserSession }) {
           style={{
             padding: 24,
             borderRadius: 12,
-            backgroundColor: "#FFF",
+            backgroundColor: theme.card,
             alignItems: "center",
             gap: 10,
           }}
         >
-          <Globe2 size={30} color={colors.muted} />
+          <Globe2 size={30} color={theme.mutedForeground} />
           <Text numberOfLines={2} style={[s.muted, { textAlign: "center" }]}>
             {failed ? "Preview unavailable. Open the browser to reconnect." : browser.url}
           </Text>
@@ -116,6 +120,8 @@ export function BrowserThreadCard({ browser }: { browser: BrowserSession }) {
 }
 const tabIcons = { Browser: Globe2, Desktop: Monitor, Terminal, Files: FolderOpen } as const;
 export function ComputerSheet() {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { workspace, api, refresh, close, open, navigate } = useWorkspace();
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -175,9 +181,9 @@ export function ComputerSheet() {
       <View style={{ gap: 20 }}>
         {shown === "Browser" && (
           <View
-            style={[s.row, { gap: 12, padding: 18, borderRadius: 20, backgroundColor: colors.sky }]}
+            style={[s.row, { gap: 12, padding: 18, borderRadius: 20, backgroundColor: theme.info }]}
           >
-            <Monitor size={28} color={colors.blueDark} />
+            <Monitor size={28} color={theme.link} />
             <View style={{ flex: 1 }}>
               <Text style={s.heading}>{available ? "Browser connected" : "Browser offline"}</Text>
               <Text style={s.muted}>

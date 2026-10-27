@@ -1,11 +1,11 @@
 import { Monitor, Play } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, AppState, Image, Platform, Text, View } from "react-native";
 import { z } from "zod";
 import type { ComputerSnapshot } from "../../../packages/domain/src/computer";
 import { useComputerDraft } from "./computer-drafts";
 import { DesktopStream } from "./desktop-stream";
-import { Button, Card, colors, ErrorNotice, s } from "./ui";
+import { Button, Card, ErrorNotice, useTheme, makeStyles } from "./ui";
 import { useWorkspace } from "./workspace";
 
 const resultSchema = z.object({
@@ -35,6 +35,8 @@ export function DesktopToolCard({
   result: unknown;
   loading: boolean;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { api, open } = useWorkspace();
   const [, setTab] = useComputerDraft("tab");
   const latest = live;
@@ -90,11 +92,11 @@ export function DesktopToolCard({
   }
   return (
     <Card
-      style={{ padding: 13, backgroundColor: "#EEEEF0", gap: 12, width: "100%", maxWidth: 640 }}
+      style={{ padding: 13, backgroundColor: theme.border, gap: 12, width: "100%", maxWidth: 640 }}
     >
       <View style={[s.row, { gap: 10 }]}>
         <View style={[s.iconBox, { width: 36, height: 36, borderRadius: 10 }]}>
-          <Monitor size={21} color={colors.blueDark} />
+          <Monitor size={21} color={theme.link} />
         </View>
         <View style={{ flex: 1, gap: 1 }}>
           <Text style={[s.text, { fontWeight: "600" }]}>Desktop</Text>
@@ -106,11 +108,11 @@ export function DesktopToolCard({
                 : (value?.action ?? "Desktop step")}
           </Text>
         </View>
-        {loading && <ActivityIndicator size="small" color={colors.blueDark} />}
+        {loading && <ActivityIndicator size="small" color={theme.link} />}
       </View>
       <ErrorNotice error={value?.error || error} />
       {latest && snapshot && !running ? (
-        <View style={{ backgroundColor: "#FAFAFB", borderRadius: 12, padding: 16, gap: 10 }}>
+        <View style={{ backgroundColor: theme.secondary, borderRadius: 12, padding: 16, gap: 10 }}>
           <Text style={s.small}>
             The computer is offline. Start it to see the desktop; apps that were open are closed.
           </Text>

@@ -1,9 +1,9 @@
 import { Mail, Search } from "lucide-react-native";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { z } from "zod";
 import { BrowserRunContext } from "./browser-tool-card";
-import { Button, Card, colors, ErrorNotice, s } from "./ui";
+import { Button, Card, ErrorNotice, useTheme, makeStyles } from "./ui";
 import { useWorkspace } from "./workspace";
 
 const messageSchema = z.object({
@@ -29,6 +29,8 @@ export function MailToolCard({
   loading: boolean;
   search?: boolean;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => makeStyles(theme), [theme]);
   const { open } = useWorkspace();
   const { active } = useContext(BrowserRunContext);
   let value = result;
@@ -45,9 +47,9 @@ export function MailToolCard({
     return (
       <View style={[s.row, { gap: 10, padding: 14 }]}>
         {active ? (
-          <ActivityIndicator size="small" color={colors.blueDark} />
+          <ActivityIndicator size="small" color={theme.link} />
         ) : (
-          <Mail size={16} color={colors.muted} />
+          <Mail size={16} color={theme.mutedForeground} />
         )}
         <Text style={s.muted}>
           {!active ? "Mail reading paused" : search ? "Checking your inbox…" : "Reading the email…"}
@@ -63,7 +65,7 @@ export function MailToolCard({
     const count = parsed.data.matches.length;
     return (
       <View style={[s.row, { gap: 9, padding: 12 }]}>
-        <Search size={16} color={colors.muted} />
+        <Search size={16} color={theme.mutedForeground} />
         <Text style={s.muted}>
           {count
             ? `Found ${parsed.data.truncated ? "at least " : ""}${count} ${count === 1 ? "email" : "emails"}`
@@ -80,11 +82,11 @@ export function MailToolCard({
   if (!message) return <Text style={s.muted}>No messages in this thread.</Text>;
   return (
     <Card
-      style={{ padding: 18, gap: 14, backgroundColor: "#F0EFF2", maxWidth: 440, width: "100%" }}
+      style={{ padding: 18, gap: 14, backgroundColor: theme.secondary, maxWidth: 440, width: "100%" }}
     >
       <View style={[s.row, { gap: 10 }]}>
-        <View style={[s.iconBox, { backgroundColor: "#E9F5FC" }]}>
-          <Mail size={20} color={colors.blueDark} />
+        <View style={[s.iconBox, { backgroundColor: theme.info }]}>
+          <Mail size={20} color={theme.link} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[s.text, { fontWeight: "600" }]}>{message.sender}</Text>
