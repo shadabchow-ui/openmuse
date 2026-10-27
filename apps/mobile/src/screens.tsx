@@ -41,8 +41,25 @@ import type {
 import { API_URL, apiPath } from "./api";
 import { browserAddress } from "./browser-address";
 import { localDateTime, startOfZonedDay, zonedInstant } from "./date-time";
-import { Button, Card, Chip, dateLabel, Empty, ErrorNotice, IconButton, LinkRow, Mascot, relativeDate, resultSummary, SectionHeading, Sheet, timeLabel, makeStyles, useTheme } from "./ui";
 import { connectionBrands } from "./theme/artwork";
+import {
+  Button,
+  Card,
+  Chip,
+  dateLabel,
+  Empty,
+  ErrorNotice,
+  IconButton,
+  LinkRow,
+  Mascot,
+  makeStyles,
+  relativeDate,
+  resultSummary,
+  SectionHeading,
+  Sheet,
+  timeLabel,
+  useTheme,
+} from "./ui";
 import { useWorkspace } from "./workspace";
 
 function todayDate() {
@@ -213,7 +230,9 @@ export function TodayScreen() {
                   <item.icon size={15} color={theme.foreground} />
                 </View>
               </View>
-              <Text style={{ fontSize: 29, color: theme.foreground, letterSpacing: -1, marginTop: -2 }}>
+              <Text
+                style={{ fontSize: 29, color: theme.foreground, letterSpacing: -1, marginTop: -2 }}
+              >
                 {String(item.value).padStart(2, "0")}
               </Text>
               <Text style={[s.small, { fontSize: 10, marginTop: 3 }]}>{item.note}</Text>
@@ -372,7 +391,6 @@ export function TodayScreen() {
 }
 function Avatar({ name, index = 0 }: { name: string; index?: number }) {
   const theme = useTheme();
-  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View
       style={{
@@ -1101,8 +1119,7 @@ export function ActivityScreen() {
                 style={[
                   s.iconBox,
                   {
-                    backgroundColor:
-                      a.status === "awaiting_review" ? theme.accent : theme.success,
+                    backgroundColor: a.status === "awaiting_review" ? theme.accent : theme.success,
                   },
                 ]}
               >
@@ -1230,7 +1247,14 @@ export function ConnectionsScreen({ query = "" }: { query?: string }) {
   const google = w.connections.find((c) => c.id === "google");
   const connected = google?.status === "connected" || google?.status === "sample";
   const rows = [
-    { id: "gmail", name: "Gmail", icon: Mail, color: connectionBrands.gmail, connected, group: "google" },
+    {
+      id: "gmail",
+      name: "Gmail",
+      icon: Mail,
+      color: connectionBrands.gmail,
+      connected,
+      group: "google",
+    },
     {
       id: "calendar",
       name: "Google Calendar",
@@ -1270,7 +1294,9 @@ export function ConnectionsScreen({ query = "" }: { query?: string }) {
                   : "Connected"
                 : "Available integrations"}
             </Text>
-            <View style={{ paddingHorizontal: 16, borderRadius: 23, backgroundColor: theme.secondary }}>
+            <View
+              style={{ paddingHorizontal: 16, borderRadius: 23, backgroundColor: theme.secondary }}
+            >
               {group.map((row, index) => (
                 <Pressable
                   key={row.id}
