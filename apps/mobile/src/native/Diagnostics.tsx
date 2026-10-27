@@ -1,6 +1,6 @@
 /** Development-only diagnostics: compatibility, session summary, streaming probe. */
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { API_URL, apiPath, type MuseApi } from "../api";
 import { isLocalGatewayUrl, type NativeConfig } from "./config";

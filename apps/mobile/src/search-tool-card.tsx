@@ -1,5 +1,5 @@
 import { Search } from "lucide-react-native";
-import { useContext, useState, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
 import { ActivityIndicator, Linking, Text, View } from "react-native";
 import { z } from "zod";
 import { BrowserRunContext } from "./browser-tool-card";

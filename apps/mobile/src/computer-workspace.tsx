@@ -12,7 +12,7 @@ import {
   Terminal,
   Upload,
 } from "lucide-react-native";
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, AppState, Platform, Text, View } from "react-native";
 import type { Artifact } from "../../../packages/domain/src";
 import type {

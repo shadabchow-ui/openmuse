@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { startPlanResponseSchema } from "../../../packages/domain/src/muse-contract";
 import { parseProposal } from "./plan-proposal";

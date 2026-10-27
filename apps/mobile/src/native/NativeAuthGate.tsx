@@ -1,6 +1,6 @@
 /** Native sign-in gate: system-browser PKCE flow, revocation-aware, update-blocking. */
 
-import { useCallback, useEffect, useRef, useState, type ReactNode, useMemo } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Linking, Platform, Text, View } from "react-native";
 import { deviceLabel, openSignIn } from "./browser-auth";
 import { readNativeConfig, type NativeConfig } from "./config";

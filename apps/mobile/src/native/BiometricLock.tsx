@@ -1,6 +1,6 @@
 /** Biometric convenience lock: a local gate for the device-held token. */
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { authenticateBiometric } from "./biometric";
 import { Button, Card, ErrorNotice, makeStyles, useTheme } from "../ui";

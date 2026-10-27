@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react-native";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { Button, makeStyles, useTheme } from "./ui";
 
