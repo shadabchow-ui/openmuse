@@ -42,11 +42,25 @@ import DateTimeEditor from "./DateTimeEditor";
 import { localDateTime, zonedInstant } from "./date-time";
 import { EmbeddedSurface } from "./embedded-surface";
 import PdfReader from "./PdfReader";
-import { Button, Card, CheckRow, Chip, dateLabel, Empty, ErrorNotice, Field, LinkRow, resultSummary, SectionHeading, Sheet, timeLabel, makeStyles, useTheme } from "./ui";
+import {
+  Button,
+  Card,
+  CheckRow,
+  Chip,
+  dateLabel,
+  Empty,
+  ErrorNotice,
+  Field,
+  LinkRow,
+  makeStyles,
+  resultSummary,
+  SectionHeading,
+  Sheet,
+  timeLabel,
+  useTheme,
+} from "./ui";
 import { type Detail, useWorkspace } from "./workspace";
 export function Details({ detail }: { detail: Detail }) {
-  const theme = useTheme();
-  const s = useMemo(() => makeStyles(theme), [theme]);
   const { close, navigate } = useWorkspace();
   if (detail.type === "computer") return <ComputerSheet />;
   if (detail.type === "task") return <TaskDetail taskId={detail.taskId} />;
@@ -580,9 +594,7 @@ function CatalogReview({ initial }: { initial: ActionProposal }) {
           {view.fields.map((field) => (
             <ReviewLine key={field.label} label={field.label} value={field.value} />
           ))}
-          <Chip tone={view.handoff ? "accent" : "success"}>
-            {action.status.replace(/_/g, " ")}
-          </Chip>
+          <Chip tone={view.handoff ? "accent" : "success"}>{action.status.replace(/_/g, " ")}</Chip>
         </Card>
       ) : (
         <Text style={s.muted}>This approval could not be shown.</Text>
@@ -673,9 +685,7 @@ function ActionReview({ initial }: { initial: ActionProposal }) {
           <Text style={s.heading}>{action.title}</Text>
           <Text style={s.small}>{action.kind.replace(".", " · ")}</Text>
         </View>
-        <Chip tone={pending ? "accent" : "success"}>
-          {action.status.replace(/_/g, " ")}
-        </Chip>
+        <Chip tone={pending ? "accent" : "success"}>{action.status.replace(/_/g, " ")}</Chip>
       </View>
       <Card style={{ gap: 13 }}>
         <ReviewLine label="Account" value={action.account || w.profile.email} />

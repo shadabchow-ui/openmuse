@@ -19,7 +19,9 @@ export function PushPrompt({
     <View style={{ paddingHorizontal: 22, paddingBottom: 8 }}>
       <Card>
         <Text style={s.text}>Get a heads-up when your robot needs you</Text>
-        <Text style={s.muted}>Turn on notifications to hear about approvals and finished work.</Text>
+        <Text style={s.muted}>
+          Turn on notifications to hear about approvals and finished work.
+        </Text>
         <Button primary onPress={onTurnOn} busy={busy} disabled={busy}>
           Turn on
         </Button>

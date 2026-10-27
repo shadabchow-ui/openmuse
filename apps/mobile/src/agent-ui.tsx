@@ -36,8 +36,23 @@ import type {
 import { useAgentWorkspace } from "./agent-workspace";
 import { capabilityOf } from "./capabilities";
 import { ActivityScreen, ConnectionsScreen } from "./screens";
-import { Button, Card, CheckRow, Chip, Empty, ErrorNotice, Field, LinkRow, Mascot, resultSummary, SectionHeading, Sheet, makeStyles, useTheme } from "./ui";
 import { financeArtwork } from "./theme/artwork";
+import {
+  Button,
+  Card,
+  CheckRow,
+  Chip,
+  Empty,
+  ErrorNotice,
+  Field,
+  LinkRow,
+  Mascot,
+  makeStyles,
+  resultSummary,
+  SectionHeading,
+  Sheet,
+  useTheme,
+} from "./ui";
 import { useWorkspace } from "./workspace";
 
 export function statusLabel(value: string) {
@@ -218,7 +233,9 @@ export function EvidenceList({ items }: { items: Evidence[] }) {
           key={item.id}
           style={{ borderLeftWidth: 2, borderLeftColor: theme.primary, paddingLeft: 12, gap: 4 }}
         >
-          <Text style={[s.small, { color: theme.foreground, fontWeight: "600" }]}>{item.title}</Text>
+          <Text style={[s.small, { color: theme.foreground, fontWeight: "600" }]}>
+            {item.title}
+          </Text>
           <Text selectable style={s.small}>
             {item.excerpt}
           </Text>
@@ -762,7 +779,9 @@ function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
               <Rect width="100%" height="100%" fill="url(#finance)" />
             </Svg>
           </View>
-          <Text style={{ color: financeArtwork.copy, fontSize: 11, lineHeight: 18, marginBottom: 20 }}>
+          <Text
+            style={{ color: financeArtwork.copy, fontSize: 11, lineHeight: 18, marginBottom: 20 }}
+          >
             Read from your imported transactions.{"\n"}
             {String(period?.from ?? "")} — {String(period?.to ?? "")}
             {"\n"}
@@ -778,7 +797,12 @@ function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
             ).map(([label, key]) => (
               <View
                 key={key}
-                style={{ flex: 1, padding: 11, borderRadius: 12, backgroundColor: financeArtwork.tile }}
+                style={{
+                  flex: 1,
+                  padding: 11,
+                  borderRadius: 12,
+                  backgroundColor: financeArtwork.tile,
+                }}
               >
                 <Text style={{ color: financeArtwork.label, fontSize: 9 }}>{label}</Text>
                 <Text
@@ -795,7 +819,9 @@ function FinanceArtifact({ artifact }: { artifact: AgentArtifact }) {
                 >
                   {amount(artifact.data[key])}
                 </Text>
-                <Text style={{ color: financeArtwork.sublabel, fontSize: 8, marginTop: 4 }}>source currency</Text>
+                <Text style={{ color: financeArtwork.sublabel, fontSize: 8, marginTop: 4 }}>
+                  source currency
+                </Text>
               </View>
             ))}
           </View>
