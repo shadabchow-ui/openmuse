@@ -13,7 +13,7 @@
     "dev:demo": "tsx apps/server/src/demo/entry.ts",
     "dev:mobile": "pnpm --dir apps/mobile start",
     "dev:web": "pnpm --dir apps/mobile web",
-    "test": "tsx --import ./tests/setup.ts --test tests/*.test.ts apps/mobile/test/*.test.ts && node scripts/check-theme-literals.mjs",
+    "test": "tsx --import ./tests/setup.ts --test --test-concurrency=1 tests/*.test.ts apps/mobile/test/*.test.ts && node scripts/check-theme-literals.mjs",
     "test:browser": "node --experimental-strip-types --test apps/worker/tests/lifecycle.test.ts",
     "typecheck": "tsc --noEmit && pnpm --dir apps/mobile typecheck",
     "lint": "biome check .",
