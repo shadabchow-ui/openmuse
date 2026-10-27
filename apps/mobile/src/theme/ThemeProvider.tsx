@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 // biome-ignore lint/correctness/noUnusedImports: the classic JSX runtime needs React in scope.
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { defaultPreferenceStorage } from "./preference-storage";
 import {
   lightTheme,
   loadThemeChoice,
-  MemoryThemeChoiceStorage,
   resolveTheme,
   type ThemeChoice,
   type ThemeChoiceStorage,
@@ -77,7 +77,7 @@ export function ThemeProvider({
   initialChoice?: ThemeChoice;
   storage?: ThemeChoiceStorage;
 }) {
-  const store = useMemo(() => storage ?? new MemoryThemeChoiceStorage(), [storage]);
+  const store = useMemo(() => storage ?? defaultPreferenceStorage, [storage]);
   const [choice, setChoiceState] = useState<ThemeChoice>(initialChoice);
   const system = useSystemScheme();
   useEffect(() => {

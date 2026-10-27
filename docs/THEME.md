@@ -75,9 +75,8 @@ success / mutedForeground; `#6AAEE0` (progress fill) -> link; `#FC2359`
 (PDF tile) -> destructive with destructiveForeground icon; `#E9F5FC`
 (icon wash) -> info; `#C7E4F9` (focused input border) -> ring;
 `#EEF0F2` (idle bubble) -> secondary; `#D8DBDE` (sheet handle) -> border;
-chat shadow `#18384B` -> scrim; error banner `#FBEFED` -> destructive bg
-with destructiveForeground text (only renders in error states, so AC-3
-screenshots are unaffected).
+chat shadow `#18384B` -> scrim; error banner `#FBEFED` -> `errorBackground` with
+`errorForeground` text (light values byte-identical to the old wash; dark follows the `destructive` role). Nav/tab bar active pill `#F0F1F2` -> `secondary`; toast text/icon on the dark toast surface -> `card`.
 
 ## Settings storage (step 3 note)
 
@@ -85,9 +84,16 @@ No non-sensitive settings storage module exists in the client (only
 SecureStore token stores, the wrong layer for a UX preference), so no
 existing module could be reused and no package was added. The choice lives
 in `ThemeProvider` state (default `system`, follows the OS), persisted
-through the injectable `ThemeChoiceStorage` seam from IOM-12 (default
-in-memory). `useTheme()` returns the context theme, defaulting to light
-with no provider mounted.
+through the injectable `ThemeChoiceStorage` seam. The default store is
+file-backed and platform-appropriate with no new dependencies: on web it
+reads and writes `localStorage` (guarded try/catch for private contexts);
+on native it reuses the existing SecureStore string helpers under a
+namespaced `appearance.choice.v1` key carrying no session or credential
+material. `MemoryThemeChoiceStorage` remains for tests and injection.
+`useTheme()` returns the context theme, defaulting to light
+with no provider mounted. The Apps screen settings area exposes a
+Light / Dark / System radio group that persists the choice through this
+seam.
 
 ## Scheme behaviour
 
@@ -108,19 +114,21 @@ as literals in chrome code:
 - Finance-tracker card artwork: base `#080B10`, gradient `#281066` /
   `#163BBF` / `#148CE8`, copy `#D4DCFC`, tiles `#1D2025`, labels `#A4A7AD`,
   sub-labels `#7E8289`, saved amount `#58D3AE`.
-## App.tsx bridge (pending header carve-out)
+## App.tsx entrypoint (completed under the 2026-10-27 scope amendment)
 
-`apps/mobile/App.tsx` is outside this job`s write set, so it is not
-converted and the provider is not mounted in production in this job:
+The amendment added `apps/mobile/App.tsx` to the write set for the step-3/4
+theme provider boundary, static colour/style conversion, and appearance
+preference integration. Status after this job:
 
-- `apps/mobile/src/ui.tsx` keeps a deprecated light `s` snapshot
-  (`makeStyles(lightTheme)`) so App-level screens render exactly as before.
-  In-set screens use the hook form. The snapshot is removed when App.tsx is
-  converted.
-- The deprecated `colors` alias is re-exported from `ui.tsx`, so App.tsx`s
-  existing `colors.` references keep working; no new `colors.` reference was
-  added by this job (remaining ones are all in App.tsx).
-- Production mount (follow-up, needs an `apps/mobile/App.tsx` carve-out):
-  wrap the tree in `<ThemeProvider>` in App.tsx and convert its ~30 theme
-  references the same way. Until then the app renders the light scheme and
-  dark is proven by the harness in step 7, which mounts the provider.
+- The root renders `<ThemeProvider><AppContent /></ThemeProvider>`; every screen
+  component consumes theme roles via `useTheme()` + `makeStyles(theme)`.
+- No `colors.` references and no colour literals remain in `App.tsx`.
+- The nav bar, toast, activity indicator and status text all render from
+  theme roles in both schemes.
+- The deprecated `s` snapshot and `colors` re-export were removed from
+  `ui.tsx` once nothing imported them (verified by grep); the canonical
+  alias lives on in `theme/legacy-colors.ts` with its pinning test.
+- Navigation, layout, copy and component structure are unchanged (colour
+  and style construction only). The only added UI is the Light / Dark /
+  System radio group in the existing settings area, which is the required
+  user-facing control for the persisted appearance preference.

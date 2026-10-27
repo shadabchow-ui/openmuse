@@ -37,6 +37,7 @@ import { useAgentWorkspace } from "./agent-workspace";
 import { capabilityOf } from "./capabilities";
 import { ActivityScreen, ConnectionsScreen } from "./screens";
 import { financeArtwork } from "./theme/artwork";
+import { useTheme as useThemeChoice } from "./theme/ThemeProvider";
 import {
   Button,
   Card,
@@ -1763,6 +1764,7 @@ export function NotificationsSheet() {
   );
 }
 export function AppsScreen() {
+  const { choice: appearanceChoice, setChoice: setAppearanceChoice } = useThemeChoice();
   const theme = useTheme();
   const s = useMemo(() => makeStyles(theme), [theme]);
   const { navigate, open, workspace } = useWorkspace();
@@ -1883,6 +1885,35 @@ export function AppsScreen() {
       </Button>
       {settings && (
         <>
+          <Card style={{ gap: 10 }}>
+            <SectionHeading title="Appearance" />
+            <View
+              accessibilityRole="radiogroup"
+              accessibilityLabel="Appearance"
+              style={[s.row, { gap: 8 }]}
+            >
+              {(["light", "dark", "system"] as const).map((value) => (
+                <Pressable
+                  key={value}
+                  accessibilityRole="radio"
+                  accessibilityLabel={value}
+                  accessibilityState={{ checked: appearanceChoice === value }}
+                  onPress={() => {
+                    void setAppearanceChoice(value);
+                  }}
+                >
+                  <Text
+                    style={[
+                      s.text,
+                      { color: appearanceChoice === value ? theme.link : theme.mutedForeground },
+                    ]}
+                  >
+                    {value}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </Card>
           {canEditIdentity && (
             <Card style={{ gap: 10 }}>
               <SectionHeading title="Your agent" />

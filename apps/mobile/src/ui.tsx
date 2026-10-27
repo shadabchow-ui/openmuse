@@ -17,25 +17,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type MascotVariant, mascotPalette } from "./theme/artwork";
-import { lightTheme, type ThemeRoles } from "./theme/theme";
-
-/** Deprecated alias of the pre-theme static palette (see theme/legacy-colors). */
-export { colors } from "./theme/legacy-colors";
-
 import { useTheme as useThemeContext } from "./theme/ThemeProvider";
+import type { ThemeRoles } from "./theme/theme";
 
 export function useTheme(): ThemeRoles {
   return useThemeContext().theme;
 }
 
 export type ChipTone = "info" | "success" | "accent" | "warning" | "destructive";
-
-/** Deprecated light snapshot for apps/mobile/App.tsx, which is outside this
- *  job’s write set and cannot be converted here. In-set screens use the
- *  hook form above; this snapshot keeps App-level screens on the exact old
- *  light styles until the App.tsx conversion + provider mount land (needs a
- *  header carve-out, recorded in docs/THEME.md). */
-export const s = makeStyles(lightTheme);
 
 export function makeStyles(theme: ThemeRoles) {
   return StyleSheet.create({
