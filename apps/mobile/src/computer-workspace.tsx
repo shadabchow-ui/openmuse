@@ -22,7 +22,17 @@ import type {
 } from "../../../packages/domain/src/computer";
 import { useComputerDraft } from "./computer-drafts";
 import { DesktopStream } from "./desktop-stream";
-import { Button, Card, Empty, ErrorNotice, Field, LinkRow, timeLabel, makeStyles, useTheme } from "./ui";
+import {
+  Button,
+  Card,
+  Empty,
+  ErrorNotice,
+  Field,
+  LinkRow,
+  makeStyles,
+  timeLabel,
+  useTheme,
+} from "./ui";
 import { useWorkspace } from "./workspace";
 
 const mono = Platform.OS === "ios" ? "Menlo" : "monospace";
@@ -215,7 +225,9 @@ export function LinuxWorkspace({
         <>
           <View style={{ display: tab === "Terminal" ? "flex" : "none", gap: 16 }}>
             {editingCommand || command.length > 0 || snapshot.commands.length === 0 ? (
-              <View style={{ borderRadius: 22, backgroundColor: theme.secondary, padding: 18, gap: 8 }}>
+              <View
+                style={{ borderRadius: 22, backgroundColor: theme.secondary, padding: 18, gap: 8 }}
+              >
                 <Text style={{ color: theme.mutedForeground, fontSize: 12, fontFamily: mono }}>
                   TERMINAL
                 </Text>

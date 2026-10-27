@@ -38,7 +38,9 @@ export default function DateFields({ label, date, time, allDay, onChange }: Date
       </View>
       {!allDay && (
         <View style={{ flex: 1, gap: 7 }}>
-          <Text style={[s.small, { fontWeight: "600", color: theme.foreground }]}>{label} time</Text>
+          <Text style={[s.small, { fontWeight: "600", color: theme.foreground }]}>
+            {label} time
+          </Text>
           <input
             aria-label={`${label} time`}
             type="time"

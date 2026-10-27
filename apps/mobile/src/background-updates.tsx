@@ -2,7 +2,7 @@ import { ArrowRight, Bell, X } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAgentWorkspace } from "./agent-workspace";
-import { Button, Card, ErrorNotice, resultSummary, makeStyles, useTheme } from "./ui";
+import { Button, Card, ErrorNotice, makeStyles, resultSummary, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 export function BackgroundUpdates() {

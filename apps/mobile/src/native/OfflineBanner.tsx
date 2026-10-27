@@ -17,7 +17,9 @@ export function OfflineBanner({ offline }: { offline: boolean }) {
         alignItems: "center",
       }}
     >
-      <Text style={{ color: theme.background, fontSize: 13 }}>You&apos;re offline. Reconnect to send messages.</Text>
+      <Text style={{ color: theme.background, fontSize: 13 }}>
+        You&apos;re offline. Reconnect to send messages.
+      </Text>
     </View>
   );
 }

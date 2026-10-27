@@ -46,9 +46,7 @@ function SourceLink({ title, url }: { title: string; url: string }) {
       onPress={() => void Linking.openURL(url)}
       style={({ pressed }) => [s.row, { gap: 4, opacity: pressed ? 0.65 : 1 }]}
     >
-      <Text style={[s.small, { color: theme.link, textDecorationLine: "underline" }]}>
-        {title}
-      </Text>
+      <Text style={[s.small, { color: theme.link, textDecorationLine: "underline" }]}>{title}</Text>
       <ExternalLink size={12} color={theme.link} />
     </Pressable>
   );

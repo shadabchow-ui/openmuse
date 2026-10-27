@@ -2,10 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
-import { authenticateBiometric } from "./biometric";
 import { Button, Card, ErrorNotice, makeStyles, useTheme } from "../ui";
+import { authenticateBiometric } from "./biometric";
 
-export function BiometricLock({ onUnlocked, onSignOut }: { onUnlocked: () => void; onSignOut: () => void }) {
+export function BiometricLock({
+  onUnlocked,
+  onSignOut,
+}: {
+  onUnlocked: () => void;
+  onSignOut: () => void;
+}) {
   const theme = useTheme();
   const s = useMemo(() => makeStyles(theme), [theme]);
   const [failed, setFailed] = useState(false);
@@ -27,7 +33,13 @@ export function BiometricLock({ onUnlocked, onSignOut }: { onUnlocked: () => voi
 
   return (
     <View
-      style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: theme.background, padding: 24 }}
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: theme.background,
+        padding: 24,
+      }}
     >
       <View style={{ width: "100%", maxWidth: 420 }}>
         <Card>

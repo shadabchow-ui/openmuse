@@ -180,6 +180,9 @@ export async function loadThemeChoice(storage: ThemeChoiceStorage): Promise<Them
   return saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
 }
 
-export async function saveThemeChoice(storage: ThemeChoiceStorage, choice: ThemeChoice): Promise<void> {
+export async function saveThemeChoice(
+  storage: ThemeChoiceStorage,
+  choice: ThemeChoice,
+): Promise<void> {
   await storage.save(choice);
 }

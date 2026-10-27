@@ -1,5 +1,6 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+// biome-ignore lint/correctness/noUnusedImports: the classic JSX runtime needs React in scope.
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   lightTheme,
   loadThemeChoice,
@@ -28,17 +29,43 @@ const ThemeContext = createContext<ThemeContextValue>(defaultValue);
 
 declare const require:
   | undefined
-  | ((id: string) => { useColorScheme: () => "light" | "dark" | null | undefined });
+  | ((id: string) => {
+      Appearance?: {
+        getColorScheme: () => "light" | "dark" | null;
+        addChangeListener: (fn: (prefs: { colorScheme: "light" | "dark" | null }) => void) => {
+          remove: () => void;
+        };
+      };
+    });
 
+/**
+ * Follows the OS appearance on device and web (react-native-web supports
+ * Appearance); resolves to light where Appearance is unavailable. All hooks
+ * run unconditionally; availability is probed inside the effect.
+ */
 function useSystemScheme(): "light" | "dark" | null {
-  try {
-    if (typeof require === "undefined") return null;
-    const rn = require("react-native");
-    if (typeof rn.useColorScheme !== "function") return null;
-    return rn.useColorScheme() ?? null;
-  } catch {
-    return null;
-  }
+  const [system, setSystem] = useState<"light" | "dark" | null>(null);
+  useEffect(() => {
+    let sub: { remove: () => void } | undefined;
+    try {
+      if (typeof require === "undefined") return;
+      const rn = require("react-native");
+      const appearance = rn.Appearance;
+      if (!appearance || typeof appearance.getColorScheme !== "function") return;
+      setSystem(appearance.getColorScheme() ?? null);
+      if (typeof appearance.addChangeListener === "function") {
+        sub = appearance.addChangeListener((prefs: { colorScheme: "light" | "dark" | null }) => {
+          setSystem(prefs.colorScheme ?? null);
+        });
+      }
+    } catch {
+      // Appearance unavailable: stay light.
+    }
+    return () => {
+      sub?.remove();
+    };
+  }, []);
+  return system;
 }
 
 export function ThemeProvider({

@@ -1,8 +1,8 @@
 import { ExternalLink } from "lucide-react-native";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { ActivityIndicator, AppState, Linking, Platform, View } from "react-native";
 import BrowserConsole from "./BrowserConsole";
-import { Button, ErrorNotice, makeStyles, useTheme } from "./ui";
+import { Button, ErrorNotice, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
@@ -73,7 +73,6 @@ export const DesktopStream = memo(function DesktopStream({
   embed?: boolean;
 }) {
   const theme = useTheme();
-  const s = useMemo(() => makeStyles(theme), [theme]);
   const embedded = embed && Platform.OS === "web";
   const { api } = useWorkspace();
   const { url, error, setError } = useDesktopStream(running && embedded);

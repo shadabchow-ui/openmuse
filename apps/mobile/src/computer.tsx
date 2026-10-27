@@ -15,7 +15,7 @@ import { browserAddress } from "./browser-address";
 import { useComputerDraft } from "./computer-drafts";
 import { computerStatus } from "./computer-status";
 import { LinuxWorkspace } from "./computer-workspace";
-import { Button, Card, ErrorNotice, Field, LinkRow, Sheet, makeStyles, useTheme } from "./ui";
+import { Button, Card, ErrorNotice, Field, LinkRow, makeStyles, Sheet, useTheme } from "./ui";
 import { useWorkspace } from "./workspace";
 
 export function ComputerEntry() {

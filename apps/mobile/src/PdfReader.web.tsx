@@ -46,7 +46,13 @@ export default function PdfReader({ url, pageCount }: PdfReaderProps) {
         key={`${page}:${zoom}`}
         title="PDF document reader"
         src={`${url}#page=${page}&zoom=${zoom}`}
-        style={{ height: 570, width: "100%", border: 0, borderRadius: 12, background: theme.secondary }}
+        style={{
+          height: 570,
+          width: "100%",
+          border: 0,
+          borderRadius: 12,
+          background: theme.secondary,
+        }}
       />
       <Text style={s.small}>Use the reader toolbar to download or print a copy.</Text>
     </View>

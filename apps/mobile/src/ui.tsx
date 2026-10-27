@@ -1,6 +1,6 @@
 import { ArrowUpRight, Check, ChevronRight, type LucideIcon, X } from "lucide-react-native";
-import { useMemo } from "react";
 import type { ReactNode } from "react";
+import { useMemo } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -16,11 +16,12 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { mascotPalette, type MascotVariant } from "./theme/artwork";
+import { type MascotVariant, mascotPalette } from "./theme/artwork";
 import { lightTheme, type ThemeRoles } from "./theme/theme";
 
 /** Deprecated alias of the pre-theme static palette (see theme/legacy-colors). */
 export { colors } from "./theme/legacy-colors";
+
 import { useTheme as useThemeContext } from "./theme/ThemeProvider";
 
 export function useTheme(): ThemeRoles {
@@ -101,7 +102,13 @@ export function makeStyles(theme: ThemeRoles) {
       alignItems: "center",
       backgroundColor: theme.info,
     },
-    error: { padding: 16, borderRadius: 14, backgroundColor: theme.destructive, marginVertical: 10, gap: 4 },
+    error: {
+      padding: 16,
+      borderRadius: 14,
+      backgroundColor: theme.destructive,
+      marginVertical: 10,
+      gap: 4,
+    },
     modalShade: {
       flex: 1,
       backgroundColor: theme.scrim,
@@ -180,7 +187,6 @@ export function IconButton({
   onPress: () => void;
 }) {
   const theme = useTheme();
-  const s = useMemo(() => makeStyles(theme), [theme]);
   return (
     <Pressable
       accessibilityRole="button"
@@ -436,13 +442,7 @@ export function LinkRow({
   );
 }
 /** OpenMuse's original capybara, shared by every assistant surface. */
-export function Mascot({
-  size = 42,
-  variant = "sky",
-}: {
-  size?: number;
-  variant?: MascotVariant;
-}) {
+export function Mascot({ size = 42, variant = "sky" }: { size?: number; variant?: MascotVariant }) {
   const palette = mascotPalette[variant];
   return (
     <View accessibilityLabel="OpenMuse capybara" style={{ width: size, height: size }}>

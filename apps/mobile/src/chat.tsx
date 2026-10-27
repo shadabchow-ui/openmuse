@@ -610,7 +610,13 @@ export function ChatScreen({
                     }}
                   >
                     {user ? (
-                      <Text selectable style={[s.text, { fontSize: 16, lineHeight: 24, color: theme.primaryForeground }]}>
+                      <Text
+                        selectable
+                        style={[
+                          s.text,
+                          { fontSize: 16, lineHeight: 24, color: theme.primaryForeground },
+                        ]}
+                      >
                         {text}
                       </Text>
                     ) : (
@@ -936,7 +942,9 @@ export function ChatScreen({
                 backgroundColor: picking || pressed ? theme.info : "transparent",
               })}
             >
-              <Text style={{ color: theme.foreground, fontSize: 29, fontWeight: "300", lineHeight: 32 }}>
+              <Text
+                style={{ color: theme.foreground, fontSize: 29, fontWeight: "300", lineHeight: 32 }}
+              >
                 +
               </Text>
             </Pressable>

@@ -92,7 +92,7 @@ with no provider mounted.
 ## Scheme behaviour
 
 - `choice: light | dark | system` (default `system`); system scheme from
-  `useColorScheme` (react-native-web supports it for the export check).
+  the `Appearance` API (react-native-web supports it for the export check; all hooks run unconditionally, availability is probed in an effect).
 - `userInterfaceStyle` in `app.json` set to `automatic` (the one-line
   config change); no other config change.
 - Deprecated `colors` alias keeps the exact old light values; a test pins
