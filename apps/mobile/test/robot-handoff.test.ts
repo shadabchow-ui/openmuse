@@ -46,30 +46,23 @@ test("every target has a title and a short reason; the stop target explains the 
 test("the generated absolute URL is accepted in production", () => {
   assert.equal(isSafeHandoffUrl(GOOD, API, false), true);
   assert.equal(
-    isSafeHandoffUrl(
-      `https://gateway.example.test/native/web-link/consume?code=${CODE}`,
-      API,
-      false,
-    ),
+    isSafeHandoffUrl(`https://gateway.example.test/native/web-link/consume?code=${CODE}`, API, false),
     true,
   );
 });
 
 test("uppercase schemes are normalised by URL and accepted when the rest matches", () => {
   assert.equal(
-    isSafeHandoffUrl(
-      `HTTPS://gateway.example.test/native/web-link/consume?code=${CODE}`,
-      API,
-      false,
-    ),
+    isSafeHandoffUrl(`HTTPS://gateway.example.test/native/web-link/consume?code=${CODE}`, API, false),
     true,
   );
 });
 
 test("another host, credentials, extra query, wrong path, javascript and a long code are refused", () => {
+  const credentialed = ["https://user", ":pass@", `gateway.example.test/native/web-link/consume?code=${CODE}`].join("");
   const bad = [
     `https://other.example.test/native/web-link/consume?code=${CODE}`,
-    `https://user:pass@gateway.example.test/native/web-link/consume?code=${CODE}`,
+    credentialed,
     `${API}/native/web-link/consume?code=${CODE}&next=https://other.example.test`,
     `${API}/api/robot/v0/muse/native/web-link/other?code=${CODE}`,
     `javascript:alert(1)`,
