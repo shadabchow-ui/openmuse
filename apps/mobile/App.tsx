@@ -2,6 +2,7 @@ import { CopilotKitProvider } from "@copilotkit/react-native/headless";
 import { StatusBar } from "expo-status-bar";
 import {
   Bell,
+  Bot,
   Check,
   Lightbulb,
   type LucideIcon,
@@ -74,6 +75,9 @@ import {
   writeSecureString,
 } from "./src/native/token-store";
 import type { TokenStore } from "./src/native/token-store-core";
+import { RobotProvider } from "./src/robot/RobotProvider";
+import { RobotScreen } from "./src/robot/RobotScreen";
+import { StopBar } from "./src/robot/StopBar";
 import { BrowserScreen, CalendarScreen, FilesScreen, MailScreen } from "./src/screens";
 import { safeSignInTarget } from "./src/surface-url";
 import { ThemeProvider } from "./src/theme/ThemeProvider";
@@ -113,6 +117,7 @@ const titles: Partial<Record<Section, { title: string; subtitle: string }>> = {
   calendar: { title: "Calendar", subtitle: "Time for what matters." },
   browser: { title: "Browser", subtitle: "Your connected browsing sessions." },
   files: { title: "Files", subtitle: "Documents, forms and filled copies." },
+  robot: { title: "Robot", subtitle: "Your robot at a glance." },
 };
 const nativeMode = process.env.EXPO_PUBLIC_AUTH_MODE === "native";
 const PUSH_SNOOZE_KEY = "muse.push.snooze.v1";
@@ -415,6 +420,19 @@ function WorkspaceApp({
     biometricCaps.current.enabled = next;
     await writeSecureString(BIOMETRIC_KEY, next ? "1" : "0").catch(() => {});
   }, []);
+  const sessionState = manager?.state();
+  const diagnosticsEnabled = typeof __DEV__ !== "undefined" && __DEV__;
+  const robotDevPanel =
+    nativeMode && diagnosticsEnabled && cfg && manager && sessionState?.kind === "signedIn" ? (
+      <Diagnostics
+        cfg={cfg}
+        api={api}
+        platform={Platform.OS === "ios" ? "ios" : "android"}
+        session={{ publicId: sessionState.publicId, expiresAtMs: sessionState.expiresAtMs }}
+        offline={offline}
+        pushStatus={pushStatus}
+      />
+    ) : undefined;
   if (!workspace)
     return (
       <SafeAreaView
@@ -463,14 +481,30 @@ function WorkspaceApp({
         <AgentWorkspaceProvider>
           <ComputerDraftProvider key={token}>
             <ThreadsProvider>
-              <WorkspaceShell
-                detail={detail}
-                toast={toast}
-                clearToast={() => setToast("")}
-                error={error}
-                prompt={prompt}
-                reconnectEpoch={nativeMode ? reconnectEpoch : undefined}
-              />
+              <RobotProvider
+                enabled={nativeMode}
+                settings={{
+                  biometricOn,
+                  onToggleBiometric: (next: boolean) => void toggleBiometric(next),
+                  notificationsOn: pushStatus.startsWith("registered"),
+                  onToggleNotifications: (next: boolean) => {
+                    if (next) void turnOnPush();
+                    else
+                      void api.request("/api/native/push-token/remove", {}, "POST").catch(() => {});
+                  },
+                  onSignOut: manager ? () => void manager.signOut() : undefined,
+                  diagnostics: robotDevPanel,
+                }}
+              >
+                <WorkspaceShell
+                  detail={detail}
+                  toast={toast}
+                  clearToast={() => setToast("")}
+                  error={error}
+                  prompt={prompt}
+                  reconnectEpoch={nativeMode ? reconnectEpoch : undefined}
+                />
+              </RobotProvider>
             </ThreadsProvider>
           </ComputerDraftProvider>
         </AgentWorkspaceProvider>
@@ -553,14 +587,19 @@ function WorkspaceShell({
           ? BrowserScreen
           : section === "files"
             ? FilesScreen
-            : section === "activity"
-              ? AgentActivityScreen
-              : section === "ideas"
-                ? IdeasScreen
-                : section === "goals"
-                  ? GoalsScreen
-                  : AppsScreen;
+            : section === "robot"
+              ? RobotScreen
+              : section === "activity"
+                ? AgentActivityScreen
+                : section === "ideas"
+                  ? IdeasScreen
+                  : section === "goals"
+                    ? GoalsScreen
+                    : AppsScreen;
   const utility = ["mail", "calendar", "browser", "files"].includes(section);
+  const navItems = nativeMode
+    ? [...nav, { id: "robot" as Section, label: "Robot", icon: Bot }]
+    : nav;
   return (
     <>
       <WorkspaceTools />
@@ -636,6 +675,7 @@ function WorkspaceShell({
               )}
             </View>
           </View>
+          {nativeMode ? <StopBar /> : null}
           <View style={{ flex: 1, minHeight: 0 }}>
             {section !== "chat" && (
               <ScrollView
@@ -727,7 +767,7 @@ function WorkspaceShell({
                 borderColor: theme.border,
               }}
             >
-              {visibleNav(nav, workspace.runtime).map((item) => {
+              {visibleNav(navItems, workspace.runtime).map((item) => {
                 const active = section === item.id || (item.id === "apps" && utility);
                 return (
                   <Pressable
