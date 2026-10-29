@@ -1,0 +1,22 @@
+{
+  "state": "degraded",
+  "animation": "transition_fade",
+  "text": "Some things need attention.",
+  "reason": "health_attention",
+  "rung": "two_d",
+  "asOf": "2026-10-26T14:11:29.512Z",
+  "source": "mission",
+  "frame": {
+    "state": "degraded",
+    "layout": "degraded_card",
+    "text": "Some things need attention.",
+    "cues": [{ "slot": "degraded_banner", "label": "Attention needed" }],
+    "recording_visible": false,
+    "listening_visible": false,
+    "uncertainty_visible": true,
+    "animation": "transition_fade",
+    "reduced_motion_alternative": true,
+    "screen_reader_text": "Robot needs attention. Some things need attention."
+  },
+  "scene": { "pose": "degraded_hold", "motion": "none" }
+}

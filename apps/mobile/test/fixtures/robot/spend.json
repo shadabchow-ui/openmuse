@@ -1,0 +1,30 @@
+{
+  "ceilings": [
+    {
+      "scope": "action",
+      "ceilingMicros": null,
+      "consumedBps": null
+    },
+    {
+      "scope": "day",
+      "ceilingMicros": null,
+      "consumedBps": null
+    },
+    {
+      "scope": "mission",
+      "ceilingMicros": "1000000",
+      "consumedBps": 0
+    },
+    {
+      "scope": "month",
+      "ceilingMicros": null,
+      "consumedBps": null
+    },
+    {
+      "scope": "unattended",
+      "ceilingMicros": null,
+      "consumedBps": null
+    }
+  ],
+  "consumedMicros": "0"
+}

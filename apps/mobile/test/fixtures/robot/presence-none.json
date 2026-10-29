@@ -1,0 +1,11 @@
+{
+  "state": "degraded",
+  "animation": null,
+  "text": "No presence signal yet.",
+  "reason": null,
+  "rung": "text",
+  "asOf": null,
+  "source": "none",
+  "frame": null,
+  "scene": null
+}

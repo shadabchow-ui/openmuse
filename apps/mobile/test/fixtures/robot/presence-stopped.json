@@ -1,0 +1,21 @@
+{
+  "state": "stopped",
+  "animation": null,
+  "text": "Stopped.",
+  "reason": "owner_phone_stop",
+  "rung": "two_d",
+  "asOf": "2026-10-26T14:11:29.512Z",
+  "source": "mission",
+  "frame": {
+    "state": "stopped",
+    "layout": "stopped_card",
+    "text": "Stopped.",
+    "cues": [{ "slot": "stop_banner", "label": "Stopped" }],
+    "recording_visible": false,
+    "listening_visible": false,
+    "uncertainty_visible": false,
+    "reduced_motion_alternative": true,
+    "screen_reader_text": "Robot is stopped."
+  },
+  "scene": { "pose": "stopped_hold", "motion": "none" }
+}

@@ -1,0 +1,21 @@
+{
+  "state": "offline",
+  "animation": null,
+  "text": "Offline.",
+  "reason": "connectivity",
+  "rung": "two_d",
+  "asOf": "2026-10-26T14:11:29.512Z",
+  "source": "mission",
+  "frame": {
+    "state": "offline",
+    "layout": "offline_card",
+    "text": "Offline.",
+    "cues": [{ "slot": "connectivity_banner", "label": "Offline" }],
+    "recording_visible": false,
+    "listening_visible": false,
+    "uncertainty_visible": false,
+    "reduced_motion_alternative": true,
+    "screen_reader_text": "Robot is offline."
+  },
+  "scene": { "pose": "offline_hold", "motion": "none" }
+}
