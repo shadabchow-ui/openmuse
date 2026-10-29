@@ -12,6 +12,7 @@ import {
   useTheme,
 } from "../ui";
 import { useWorkspace } from "../workspace";
+import { approvalRow } from "./approvals";
 import type { PageId } from "./pages";
 import { useRobot } from "./RobotProvider";
 import { RobotStage } from "./RobotStage";
@@ -107,13 +108,11 @@ export function RobotOverview({ onOpenPage }: { onOpenPage: (page: PageId) => vo
         </Text>
         {approvals.length === 0 ? <Text style={s.muted}>No approvals waiting.</Text> : null}
         {approvals.map((action) => {
-          const tier = typeof action.data.tier === "string" ? action.data.tier : "Tier unknown";
+          const row = approvalRow(action);
           return (
             <View key={action.id} style={{ gap: 2 }}>
-              <Text style={s.text}>{action.title}</Text>
-              <Text style={s.small}>
-                {tier} · {action.status.replace("_", " ")}
-              </Text>
+              <Text style={s.text}>{row.title}</Text>
+              <Text style={s.small}>{row.meta}</Text>
             </View>
           );
         })}
