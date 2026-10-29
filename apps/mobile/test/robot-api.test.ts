@@ -4,7 +4,6 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
-  RobotApiError,
   createWebLink,
   engageStop,
   forgetMemory,
@@ -19,9 +18,10 @@ import {
   getStop,
   getSummary,
   markDeviceLost,
-  revokeSession,
+  RobotApiError,
   type RobotRequest,
   type RobotResult,
+  revokeSession,
 } from "../src/robot/robot-api";
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "robot");
@@ -110,7 +110,9 @@ test("mutations call the literal path, method and body", async () => {
       [`/api/robot/devices/${DEVICE_ID}/lost`]: { ok: true },
       "/api/robot/stop": fixture("stop"),
       [`/api/native/sessions/${SESSION_ID}/revoke`]: { ok: true },
-      "/api/native/web-link": { url: "https://gateway.example.test/native/web-link/consume?code=abcdefghijklmnopqrstuvwx" },
+      "/api/native/web-link": {
+        url: "https://gateway.example.test/native/web-link/consume?code=abcdefghijklmnopqrstuvwx",
+      },
     },
     calls,
   );
@@ -119,9 +121,7 @@ test("mutations call the literal path, method and body", async () => {
   await expectOk(markDeviceLost(request, DEVICE_ID));
   await expectOk(engageStop(request));
   await expectOk(revokeSession(request, SESSION_ID));
-  await expectOk(
-    createWebLink(request, "killswitch"),
-  );
+  await expectOk(createWebLink(request, "killswitch"));
   assert.deepEqual(
     calls.map((call) => [call.method, call.path, call.body]),
     [
@@ -166,12 +166,15 @@ test("sessions use the wrapper shape", async () => {
 test("an unexpected key throws the fixed shape error", async () => {
   const summary = fixture("summary") as Record<string, unknown>;
   const request = responder({ ...summary, unusable: true }, []);
-  await assert.rejects(() => getSummary(request), (error: unknown) => {
-    assert.ok(error instanceof RobotApiError);
-    assert.equal(error.code, "shape");
-    assert.equal(error.message, "Something went wrong.");
-    return true;
-  });
+  await assert.rejects(
+    () => getSummary(request),
+    (error: unknown) => {
+      assert.ok(error instanceof RobotApiError);
+      assert.equal(error.code, "shape");
+      assert.equal(error.message, "Something went wrong.");
+      return true;
+    },
+  );
 });
 
 test("an invalid id is rejected before the request is made", async () => {

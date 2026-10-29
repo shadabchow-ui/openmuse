@@ -133,30 +133,19 @@ export const presenceFrameSchema = z.strictObject({
   recording_visible: z.boolean(),
   listening_visible: z.boolean(),
   uncertainty_visible: z.boolean(),
-  animation: z
-    .enum(["transition_fade", "attention_pulse_once", "progress_step"])
-    .optional(),
+  animation: z.enum(["transition_fade", "attention_pulse_once", "progress_step"]).optional(),
   reduced_motion_alternative: z.literal(true),
   screen_reader_text: z.string().min(1).max(280),
 });
 
 export const presenceSceneSchema = z.strictObject({
-  pose: z.enum([
-    "rest",
-    "attentive",
-    "working",
-    "degraded_hold",
-    "offline_hold",
-    "stopped_hold",
-  ]),
+  pose: z.enum(["rest", "attentive", "working", "degraded_hold", "offline_hold", "stopped_hold"]),
   motion: z.enum(["none", "idle_sway", "acknowledge", "settle"]),
 });
 
 export const presenceViewSchema = z.strictObject({
   state: z.enum(["idle", "active", "awaiting_owner", "stopped", "degraded", "offline"]),
-  animation: z
-    .enum(["transition_fade", "attention_pulse_once", "progress_step"])
-    .nullable(),
+  animation: z.enum(["transition_fade", "attention_pulse_once", "progress_step"]).nullable(),
   text: z.string(),
   reason: z.string().nullable(),
   rung: z.enum(["three_d", "two_d", "voice_status", "text", "headless"]),

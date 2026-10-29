@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { DeletionJobView } from "../../../packages/domain/src/muse-robot-contract";
 import {
+  createForgetFlow,
   FORGET_FAILED_SENTENCE,
   FORGET_TIMEOUT_NOTE,
-  createForgetFlow,
   initialForgetState,
 } from "../src/robot/forget-flow";
 

@@ -81,10 +81,7 @@ test("missing and extra keys are rejected", () => {
 test("amounts are digit strings, and the fixture's null ceilings stay allowed", () => {
   assert.equal(parseCeilingItem({ scope: "day", ceilingMicros: "1000", consumedBps: 0 }).ok, true);
   assert.equal(parseCeilingItem({ scope: "day", ceilingMicros: "1.5", consumedBps: 0 }).ok, false);
-  assert.equal(
-    parseCeilingItem({ scope: "day", ceilingMicros: "1e6", consumedBps: 0 }).ok,
-    false,
-  );
+  assert.equal(parseCeilingItem({ scope: "day", ceilingMicros: "1e6", consumedBps: 0 }).ok, false);
   assert.equal(parseCeilingItem({ scope: "day", ceilingMicros: null, consumedBps: null }).ok, true);
   assert.equal(parseSpendView({ ceilings: [], consumedMicros: "12.50" }).ok, false);
   assert.equal(parseSpendView({ ceilings: [], consumedMicros: "1250" }).ok, true);

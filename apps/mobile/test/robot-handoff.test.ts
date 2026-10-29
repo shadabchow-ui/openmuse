@@ -46,14 +46,22 @@ test("every target has a title and a short reason; the stop target explains the 
 test("the generated absolute URL is accepted in production", () => {
   assert.equal(isSafeHandoffUrl(GOOD, API, false), true);
   assert.equal(
-    isSafeHandoffUrl(`https://gateway.example.test/native/web-link/consume?code=${CODE}`, API, false),
+    isSafeHandoffUrl(
+      `https://gateway.example.test/native/web-link/consume?code=${CODE}`,
+      API,
+      false,
+    ),
     true,
   );
 });
 
 test("uppercase schemes are normalised by URL and accepted when the rest matches", () => {
   assert.equal(
-    isSafeHandoffUrl(`HTTPS://gateway.example.test/native/web-link/consume?code=${CODE}`, API, false),
+    isSafeHandoffUrl(
+      `HTTPS://gateway.example.test/native/web-link/consume?code=${CODE}`,
+      API,
+      false,
+    ),
     true,
   );
 });

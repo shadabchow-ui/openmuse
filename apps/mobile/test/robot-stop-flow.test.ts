@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  STOP_FAILED_SENTENCE,
   initialStopState,
-  stopReducer,
+  STOP_FAILED_SENTENCE,
   type StopEvent,
   type StopState,
+  stopReducer,
 } from "../src/robot/stop-flow";
 
 function apply(events: StopEvent[], start: StopState = initialStopState): StopState {
@@ -38,7 +38,12 @@ test("cancel closes the sheet; sending cannot be cancelled", () => {
 });
 
 test("a release seen from the web returns an engaged robot to idle", () => {
-  const engaged = apply([{ type: "open" }, { type: "confirm" }, { type: "sent" }, { type: "summary", engaged: true }]);
+  const engaged = apply([
+    { type: "open" },
+    { type: "confirm" },
+    { type: "sent" },
+    { type: "summary", engaged: true },
+  ]);
   assert.equal(stopReducer(engaged, { type: "summary", engaged: false }).phase, "idle");
 });
 

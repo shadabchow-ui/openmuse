@@ -1,4 +1,7 @@
-import type { DeletionJobView, ForgetResult } from "../../../../packages/domain/src/muse-robot-contract";
+import type {
+  DeletionJobView,
+  ForgetResult,
+} from "../../../../packages/domain/src/muse-robot-contract";
 import type { Schedule } from "./poller";
 
 export type ForgetPhase = "idle" | "confirming" | "sending" | "waiting" | "done" | "failed";

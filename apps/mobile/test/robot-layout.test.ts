@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  overviewColumns,
   ROBOT_TAB_COUNT,
   ROBOT_TARGET_PT,
-  overviewColumns,
   robotLayoutFor,
   tabBarFits,
 } from "../src/robot/layout";

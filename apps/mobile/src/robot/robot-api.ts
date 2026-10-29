@@ -1,30 +1,30 @@
 import type { z } from "zod";
 import {
-  deletionJobViewSchema,
-  deviceListSchema,
-  dnaSummarySchema,
-  forgetResultSchema,
-  memoryListSchema,
-  nativeSessionsSchema,
-  okSchema,
-  presenceViewSchema,
-  robotSummarySchema,
-  skillListSchema,
-  spendViewSchema,
-  stopStatusSchema,
-  webLinkSchema,
   type DeletionJobView,
   type DeviceList,
   type DnaSummary,
+  deletionJobViewSchema,
+  deviceListSchema,
+  dnaSummarySchema,
   type ForgetResult,
+  forgetResultSchema,
   type MemoryList,
+  memoryListSchema,
   type NativeSessions,
+  nativeSessionsSchema,
+  okSchema,
   type PresenceView,
+  presenceViewSchema,
   type RobotSummary,
+  robotSummarySchema,
   type SkillList,
   type SpendView,
   type StopStatus,
+  skillListSchema,
+  spendViewSchema,
+  stopStatusSchema,
   type WebLink,
+  webLinkSchema,
 } from "../../../../packages/domain/src/muse-robot-contract";
 import { HANDOFF_TARGETS, type HandoffKey } from "./handoff";
 
@@ -131,7 +131,13 @@ export function forgetMemory(
   id: string,
 ): Promise<RobotResult<ForgetResult>> {
   assertUuid(id);
-  return call(request, `/api/robot/memory/${id}/forget`, forgetResultSchema, { confirm: true }, "POST");
+  return call(
+    request,
+    `/api/robot/memory/${id}/forget`,
+    forgetResultSchema,
+    { confirm: true },
+    "POST",
+  );
 }
 
 export function getDeletionJob(

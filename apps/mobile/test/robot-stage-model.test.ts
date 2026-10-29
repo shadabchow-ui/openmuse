@@ -4,8 +4,8 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
-  parsePresenceView,
   type PresenceView,
+  parsePresenceView,
 } from "../../../packages/domain/src/muse-robot-contract";
 import { NO_PRESENCE, OFFLINE_TEXT, stageViewFor } from "../src/robot/stage-model";
 
@@ -48,7 +48,10 @@ test("the offline override shows the last known status without claiming liveness
   assert.equal(view.glyph, "offline");
   assert.equal(view.title, "Offline");
   assert.equal(view.motion, "none");
-  assert.match(view.statusText, new RegExp(`^${OFFLINE_TEXT.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} `));
+  assert.match(
+    view.statusText,
+    new RegExp(`^${OFFLINE_TEXT.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} `),
+  );
   assert.match(view.statusText, /Working on your mission/);
   assert.equal(view.announce, OFFLINE_TEXT);
 });

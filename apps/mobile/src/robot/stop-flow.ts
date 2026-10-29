@@ -30,7 +30,7 @@ function withPhase(phase: StopPhase, patch: Partial<StopState> = {}): StopState 
   return { ...initialStopState, ...patch, phase };
 }
 
-/** Pure STOP flow. The phone can engage, never release. */
+/** Pure STOP flow. The phone can engage but has no way to disengage. */
 export function stopReducer(state: StopState, event: StopEvent): StopState {
   switch (event.type) {
     case "open":
