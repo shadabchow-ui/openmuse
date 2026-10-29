@@ -1,0 +1,11 @@
+{
+  "devices": [
+    {
+      "id": "test-phone",
+      "label": "test-phone",
+      "state": "active",
+      "lastSeenAt": null
+    }
+  ],
+  "sessions": []
+}

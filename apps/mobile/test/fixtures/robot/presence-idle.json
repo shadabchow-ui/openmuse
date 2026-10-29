@@ -1,0 +1,21 @@
+{
+  "state": "idle",
+  "animation": null,
+  "text": "Ready when you are.",
+  "reason": null,
+  "rung": "two_d",
+  "asOf": "2026-10-26T14:11:29.512Z",
+  "source": "mission",
+  "frame": {
+    "state": "idle",
+    "layout": "status_card",
+    "text": "Ready when you are.",
+    "cues": [{ "slot": "state_label", "label": "Idle" }],
+    "recording_visible": false,
+    "listening_visible": false,
+    "uncertainty_visible": false,
+    "reduced_motion_alternative": true,
+    "screen_reader_text": "Robot is idle. Ready when you are."
+  },
+  "scene": { "pose": "rest", "motion": "none" }
+}

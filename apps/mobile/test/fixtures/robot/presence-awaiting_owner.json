@@ -1,0 +1,22 @@
+{
+  "state": "awaiting_owner",
+  "animation": "attention_pulse_once",
+  "text": "Needs your review.",
+  "reason": null,
+  "rung": "two_d",
+  "asOf": "2026-10-26T14:11:29.512Z",
+  "source": "mission",
+  "frame": {
+    "state": "awaiting_owner",
+    "layout": "approval_card",
+    "text": "Needs your review.",
+    "cues": [{ "slot": "approval_callout", "label": "Approval waiting" }],
+    "recording_visible": false,
+    "listening_visible": false,
+    "uncertainty_visible": false,
+    "animation": "attention_pulse_once",
+    "reduced_motion_alternative": true,
+    "screen_reader_text": "Robot needs your review."
+  },
+  "scene": { "pose": "attentive", "motion": "acknowledge" }
+}

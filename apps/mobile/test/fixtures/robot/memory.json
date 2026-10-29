@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": "8df4f3c4-948e-4a6f-8438-178ced5e15eb",
+      "scope": "preferences",
+      "layer": "semantic",
+      "admission": "admitted",
+      "trust": "user_asserted",
+      "preview": "A temporary note the owner asked to forget.",
+      "createdAt": "2026-10-26T14:11:29.481Z"
+    },
+    {
+      "id": "b5b1001e-9f63-4c1c-901a-4fa23eac480f",
+      "scope": "profile",
+      "layer": "semantic",
+      "admission": "admitted",
+      "trust": "user_asserted",
+      "preview": "The owner is testing the robot console read models.",
+      "createdAt": "2026-10-26T14:11:29.480Z"
+    },
+    {
+      "id": "73cee52e-430e-479e-bc5e-9d41bbfac3a1",
+      "scope": "preferences",
+      "layer": "semantic",
+      "admission": "admitted",
+      "trust": "user_asserted",
+      "preview": "The owner prefers morning briefings before eight.",
+      "createdAt": "2026-10-26T14:11:29.472Z"
+    }
+  ],
+  "truncated": false
+}

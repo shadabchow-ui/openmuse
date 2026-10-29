@@ -1,0 +1,22 @@
+{
+  "state": "active",
+  "animation": "progress_step",
+  "text": "Working on your mission.",
+  "reason": null,
+  "rung": "two_d",
+  "asOf": "2026-10-26T14:11:29.512Z",
+  "source": "mission",
+  "frame": {
+    "state": "active",
+    "layout": "status_card",
+    "text": "Working on your mission.",
+    "cues": [{ "slot": "state_label", "label": "Working" }],
+    "recording_visible": false,
+    "listening_visible": false,
+    "uncertainty_visible": false,
+    "animation": "progress_step",
+    "reduced_motion_alternative": true,
+    "screen_reader_text": "Robot is working on your mission."
+  },
+  "scene": { "pose": "working", "motion": "idle_sway" }
+}

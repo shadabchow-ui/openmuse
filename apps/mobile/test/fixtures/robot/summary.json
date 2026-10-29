@@ -1,0 +1,71 @@
+{
+  "robot": {
+    "name": "Test Robot",
+    "activatedAt": "2026-09-20T12:00:00.000Z",
+    "ageDays": 36
+  },
+  "activated": true,
+  "health": {
+    "status": "ok",
+    "signals": [
+      {
+        "key": "presence",
+        "state": "unknown",
+        "detail": "no presence signal yet (rung two_d)"
+      },
+      {
+        "key": "ceilings",
+        "state": "ok",
+        "detail": "spending limits have headroom"
+      },
+      {
+        "key": "activation",
+        "state": "ok",
+        "detail": "activation complete"
+      }
+    ]
+  },
+  "stop": {
+    "engaged": false,
+    "reasonCode": null,
+    "engagedAt": null
+  },
+  "spend": {
+    "ceilings": [
+      {
+        "scope": "action",
+        "ceilingMicros": null,
+        "consumedBps": null
+      },
+      {
+        "scope": "day",
+        "ceilingMicros": null,
+        "consumedBps": null
+      },
+      {
+        "scope": "mission",
+        "ceilingMicros": "1000000",
+        "consumedBps": 0
+      },
+      {
+        "scope": "month",
+        "ceilingMicros": null,
+        "consumedBps": null
+      },
+      {
+        "scope": "unattended",
+        "ceilingMicros": null,
+        "consumedBps": null
+      }
+    ]
+  },
+  "counts": {
+    "pendingApprovals": 0,
+    "activeMissions": 0,
+    "unresolved": 0
+  },
+  "approvalsHandoff": "console",
+  "approvalsHandoffVerified": false,
+  "degraded": [],
+  "asOf": "2026-10-26T14:11:29.512Z"
+}

@@ -1,0 +1,13 @@
+{
+  "skills": [
+    {
+      "installId": "82d375cd-28ff-4827-8122-4306b2874cc3",
+      "name": "invoice-triage",
+      "version": "1.2.0",
+      "digestPrefix": "a6aee8dc1b36",
+      "state": "installed",
+      "installedAt": "2026-10-26T14:11:29.491Z"
+    }
+  ],
+  "complete": true
+}
