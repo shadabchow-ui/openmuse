@@ -82,8 +82,8 @@ async function main(){
      const measurement=await measurePage(page,t[scheme==="dark"?"darkTheme":"lightTheme"].background);
      Object.assign(cell,{status:verdict(measurement),measurement,screenshot:surface+"-"+variant+"-"+width+".png"});
      await page.screenshot({path:join(out,cell.screenshot),fullPage:true});
-    }catch(error){cell.reason=String(error.message).split("\n")[0];}
-    finally{await page?.close();}cells.push(cell);
+    }catch(error){cell.status="NOT_RUN";cell.reason=String(error.message).split("\n")[0];if(cells.length===0){writeFileSync(join(out,"BOOTSTRAP_FAILURE.json"),JSON.stringify(cell,null,2));throw error;}}
+    finally{await page?.close();}cells.push(cell);writeFileSync(join(out,"PROGRESS.json"),JSON.stringify({completed:cells.length,last:{surface,variant,width,status:cell.status}},null,2));
    }
    await context.close();
   }
