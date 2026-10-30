@@ -48,7 +48,7 @@ export async function measurePage(page,expectedBackground){
  return{text,focus,canvas:raw.canvas,unknown:raw.unknown+(raw.controls>128?1:0),longAnimations:raw.longAnimations,themeApplied,scope:"visible viewport, empty/fixture state; physical displays/assistive technology/other browsers NOT_RUN"};
 }
 export function literalScan(root){
- const files=[],walk=d=>{if(!statSync(d).isDirectory())return;for(const n of readdirSync(d)){const p=join(d,n),s=statSync(p);if(s.isDirectory())walk(p);else if(/\.(tsx|css)$/.test(n))files.push(p);}};
+ const files=[join(root,"apps/mobile/App.tsx")],walk=d=>{if(!statSync(d).isDirectory())return;for(const n of readdirSync(d)){const p=join(d,n),s=statSync(p);if(s.isDirectory())walk(p);else if(/\.(tsx|css)$/.test(n))files.push(p);}};
  for(const p of["apps/mobile/src","apps/mobile/dist/web"])walk(join(root,p));
  return files.map(p=>({file:p.slice(root.length+1),literalColors:(readFileSync(p,"utf8").match(/#[0-9a-f]{3,8}\b|rgba?\(/gi)||[]).length}));
 }
