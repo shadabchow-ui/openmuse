@@ -5,6 +5,9 @@ export function color(value){
  const m=/^rgba?\(([^)]+)\)$/.exec(value??"");if(!m)return null;
  const v=m[1].split(",").map(Number);return v.length>=3&&v.every(Number.isFinite)?v:null;
 }
+export function compositeBackground(chain){
+ let result=[255,255,255];for(const value of chain){const c=color(value);if(c){const a=c[3]??1;result=c.slice(0,3).map((v,i)=>v*a+result[i]*(1-a));}}return result;
+}
 export function contrast(a,b){
  const lum=c=>c.slice(0,3).map(x=>{x/=255;return x<=0.04045?x/12.92:((x+0.055)/1.055)**2.4;}).reduce((n,x,i)=>n+x*[0.2126,0.7152,0.0722][i],0);
  const x=lum(a),y=lum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);
@@ -36,9 +39,9 @@ export async function measurePage(page,expectedBackground){
   await page.keyboard.press("Tab");
   const row=await page.evaluate(()=>{
    const e=document.activeElement;if(!e||e===document.body)return null;
-   const s=getComputedStyle(e),r=e.getBoundingClientRect();return{id:[...document.querySelectorAll("*")].indexOf(e),element:e.tagName,label:e.getAttribute("aria-label")||e.textContent?.trim().slice(0,80),outline:s.outlineColor,outlineWidth:parseFloat(s.outlineWidth),outlineStyle:s.outlineStyle,background:s.backgroundColor,shadow:s.boxShadow,visibleRect:r.width>0&&r.height>0};});
+   const s=getComputedStyle(e),r=e.getBoundingClientRect(),backgroundChain=[];for(let n=e;n;n=n.parentElement)backgroundChain.unshift(getComputedStyle(n).backgroundColor);return{backgroundChain,id:[...document.querySelectorAll("*")].indexOf(e),element:e.tagName,label:e.getAttribute("aria-label")||e.textContent?.trim().slice(0,80),outline:s.outlineColor,outlineWidth:parseFloat(s.outlineWidth),outlineStyle:s.outlineStyle,background:s.backgroundColor,shadow:s.boxShadow,visibleRect:r.width>0&&r.height>0};});
   if(!row||seen.has(row.id))continue;seen.add(row.id);
-  const fg=color(row.outline),bg=color(row.background);const ratio=fg&&bg&&((bg[3]??1)>0)?contrast(fg,bg):0;
+  const fg=color(row.outline),bg=compositeBackground(row.backgroundChain);const ratio=fg?contrast(fg.slice(0,3).map((v,i)=>v*(fg[3]??1)+bg[i]*(1-(fg[3]??1))),bg):0;
   focus.push({...row,ratio,visible:row.visibleRect&&row.outlineWidth>0&&row.outlineStyle!=="none"&&ratio>=3});
  }
  const expected=color(expectedBackground),themeApplied=!!expected&&raw.backgrounds.some(c=>c.slice(0,3).every((v,i)=>Math.abs(v-expected[i])<1));
