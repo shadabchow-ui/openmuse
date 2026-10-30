@@ -1,5 +1,8 @@
 import{readFileSync,readdirSync,statSync,mkdirSync,writeFileSync}from"node:fs";
 import{resolve,join}from"node:path";import{pathToFileURL}from"node:url";
+export function assertSandboxArgs(args){
+ if(!Array.isArray(args)||!args.length||args.some(a=>typeof a!=="string"||a==="--no-sandbox"||a.startsWith("--no-sandbox=")||a==="--disable-setuid-sandbox"||a.startsWith("--disable-setuid-sandbox=")))throw Error("unsafe or missing browser arguments");
+}
 export function color(value){
  if(/^#[0-9a-f]{6}$/i.test(value))return[1,3,5].map(i=>parseInt(value.slice(i,i+2),16));
  const m=/^rgba?\(([^)]+)\)$/.exec(value??"");if(!m)return null;
@@ -61,7 +64,7 @@ async function main(){
  mkdirSync(out,{recursive:true});let server,browser;
  try{
   server=await chromium.launchServer({chromiumSandbox:true,timeout:45000});const launchArgs=server.process().spawnargs;
-  if(launchArgs.some(a=>a==="--no-sandbox"||a.startsWith("--no-sandbox=")||a==="--disable-setuid-sandbox"))throw Error("unsafe browser arguments");
+  assertSandboxArgs(launchArgs);
   browser=await chromium.connect(server.wsEndpoint());
   for(const width of[1280,390])for(const variant of["light","dark","system-light","system-dark"]){
    const scheme=variant.endsWith("dark")?"dark":"light",choice=variant.startsWith("system")?"system":variant,context=await browser.newContext({viewport:{width,height:900},colorScheme:scheme,reducedMotion:"reduce"});

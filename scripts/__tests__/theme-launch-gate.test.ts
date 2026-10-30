@@ -15,7 +15,7 @@ test("missing or nonancestor baseline fails closed",()=>{
  assert.equal(ACCEPTED_SOURCE_BASELINE,"c03b183044295ee9c1005dfb3c86845f087bf5f0");
 });
 test("whole-source import deny policy retained",()=>assert.equal(deniedImports([{path:"fixture.ts",text:'import x from "next-themes"'}]).length,1));
-import{color,contrast,verdict,compositeBackground,literalScan}from"../theme-launch-gate.mjs";
+import{color,contrast,verdict,compositeBackground,literalScan,assertSandboxArgs}from"../theme-launch-gate.mjs";
 test("computed-color math uses WCAG linear luminance",()=>{assert.equal(contrast([0,0,0],[255,255,255]),21);assert.equal(contrast([150,150,150],[150,150,150]),1);assert.deepEqual(color("#ff0000"),[255,0,0]);assert.deepEqual(color("rgb(1, 2, 3)"),[1,2,3]);});
 test("missing measurements, low contrast, wrong theme and long motion never pass",()=>{
  const good={text:[{ratio:7}],focus:[{visible:true,ratio:4}],unknown:0,themeApplied:true,longAnimations:[]};assert.equal(verdict(good),"PASS");
@@ -25,3 +25,5 @@ test("missing measurements, low contrast, wrong theme and long motion never pass
 test("transparent focus backgrounds resolve through actual ancestor colours",()=>{assert.deepEqual(compositeBackground(["rgb(0, 0, 0)","rgba(255, 255, 255, 0)"]),[0,0,0]);assert.deepEqual(compositeBackground(["rgb(0, 0, 0)","rgba(255, 255, 255, 0.5)"]),[127.5,127.5,127.5]);});
 
 test("literal inventory includes the shipped root application entry",()=>assert.ok(literalScan(process.cwd()).some(r=>r.file==="apps/mobile/App.tsx")));
+
+test("sandbox-disable flags and missing launch proof fail closed",()=>{assertSandboxArgs(["browser","--headless"]);for(const a of["--no-sandbox","--no-sandbox=true","--disable-setuid-sandbox","--disable-setuid-sandbox=true"])assert.throws(()=>assertSandboxArgs(["browser",a]));assert.throws(()=>assertSandboxArgs([]));});
