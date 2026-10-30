@@ -71,25 +71,25 @@ async function main(){
     const cell={surface,variant,width,status:"NOT_RUN",reason:null};let page;
     try{
      if(surface==="robot"){cell.reason="native-only Robot route absent from external-auth web navigation";cells.push(cell);continue;}
-     page=await context.newPage();await page.goto(origin+"/muse",{waitUntil:"domcontentloaded"});await page.getByRole("textbox",{name:"Message OpenMuse"}).waitFor({timeout:15000});
+     page=await context.newPage();page.setDefaultTimeout(5000);await page.goto(origin+"/muse",{waitUntil:"domcontentloaded"});await page.getByRole("textbox",{name:"Message OpenMuse"}).waitFor({timeout:15000});
      if(surface==="threads")await page.getByRole("button",{name:"Open conversations and menu",exact:true}).click();
      else if(surface==="settings"||["mail","calendar","browser","files"].includes(surface)){
-      await page.getByRole("button",{name:"Apps",exact:true}).click();
+      await page.getByRole("tab",{name:"Apps",exact:true}).click();
       const label={settings:"Personality & memory",mail:"Mail",calendar:"Calendar",browser:"Agent computer",files:"Files"}[surface];
       await page.getByText(label,{exact:true}).first().click({timeout:5000});
-     }else if(surface!=="chat")await page.getByRole("button",{name:surface[0].toUpperCase()+surface.slice(1),exact:true}).click();
+     }else if(surface!=="chat")await page.getByRole("tab",{name:surface[0].toUpperCase()+surface.slice(1),exact:true}).click();
      await page.waitForTimeout(150);
      const measurement=await measurePage(page,t[scheme==="dark"?"darkTheme":"lightTheme"].background);
      Object.assign(cell,{status:verdict(measurement),measurement,screenshot:surface+"-"+variant+"-"+width+".png"});
      await page.screenshot({path:join(out,cell.screenshot),fullPage:true});
     }catch(error){cell.status="NOT_RUN";cell.reason=String(error.message).split("\n")[0];if(cells.length===0){writeFileSync(join(out,"BOOTSTRAP_FAILURE.json"),JSON.stringify(cell,null,2));throw error;}}
-    finally{await page?.close();}cells.push(cell);writeFileSync(join(out,"PROGRESS.json"),JSON.stringify({completed:cells.length,last:{surface,variant,width,status:cell.status}},null,2));
+    finally{await page?.close();}cells.push(cell);writeFileSync(join(out,"PROGRESS.json"),JSON.stringify({completed:cells.length,last:{surface,variant,width,status:cell.status},cells},null,2));
    }
    await context.close();
   }
   const context=await browser.newContext({viewport:{width:1280,height:900},colorScheme:"dark",reducedMotion:"reduce"});
   await context.addInitScript(()=>localStorage.setItem("appearance.choice.v1","dark"));await context.route("**/*",r=>new URL(r.request().url()).origin===u.origin?r.continue():r.abort());
-  const page=await context.newPage();await page.goto(origin+"/muse");await page.getByRole("textbox",{name:"Message OpenMuse"}).waitFor();
+  const page=await context.newPage();page.setDefaultTimeout(5000);await page.goto(origin+"/muse");await page.getByRole("textbox",{name:"Message OpenMuse"}).waitFor();
   await page.addStyleTag({content:"*{color:rgb(150,150,150)!important;background-color:rgb(151,151,151)!important}"});const low=await measurePage(page,t.darkTheme.background);mutations.push({name:"forced-low-contrast",failedAsExpected:low.text.some(p=>p.ratio<4.5)});
   await page.evaluate(()=>localStorage.setItem("appearance.choice.v1","light"));await page.reload();await page.getByRole("textbox",{name:"Message OpenMuse"}).waitFor();const wrong=await measurePage(page,t.darkTheme.background);mutations.push({name:"dark-selection-removed",failedAsExpected:!wrong.themeApplied});await context.close();
   const counts=Object.fromEntries(["PASS","FAIL","NOT_RUN"].map(s=>[s,cells.filter(c=>c.status===s).length])),result={environment:"local sandboxed browser; in-memory gateway fixtures, not a real consumer backend",sourcePin:"c03b183044295ee9c1005dfb3c86845f087bf5f0",browser:browser.version(),launchArgs,cells,counts,literalColors:literalScan(process.cwd()),mutations,composite:counts.FAIL||counts.NOT_RUN?"FAIL":"PASS",independentReview:"PENDING",nativeDevice:"NOT_RUN"};
