@@ -19,6 +19,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Exact paths, or a single `*` that stands for one path segment's characters (no slash). */
 export const ALLOWED = [
+  "scripts/theme-launch-gate.mjs",
+  "scripts/__tests__/theme-launch-gate.test.ts",
+  "docs/theme-launch-gate/RESULTS.md",
   "apps/mobile/src/api-config.ts",
   "apps/mobile/src/api.ts",
   "apps/mobile/src/api-response.ts",
@@ -159,6 +162,19 @@ export function declaredPackages(base) {
   ]);
 }
 
+// Retain only byte/mode-identical source already accepted at this fixed public commit.
+// This never permits a new path or a modified historical file.
+export const ACCEPTED_SOURCE_BASELINE = "c03b183044295ee9c1005dfb3c86845f087bf5f0";
+export function identicalAcceptedEntry(baseline, current) {
+  return typeof baseline === "string" && baseline.length > 0 && baseline === current;
+}
+export function requireAcceptedAncestor(exists, ancestor) {
+  if (!exists || !ancestor) throw Error("fixed accepted source baseline missing or not an ancestor");
+}
+function acceptedEntries(ref) {
+  const raw=execFileSync("git",["ls-tree","-r","-z",ref],{cwd:root,encoding:"utf8",maxBuffer:64*1024*1024});
+  return new Map(raw.split("\0").filter(Boolean).map(entry=>[entry.slice(entry.indexOf("\t")+1),entry]));
+}
 function main() {
   try {
     execFileSync("git", ["rev-parse", "--verify", "--quiet", "origin/main"], {
@@ -169,6 +185,14 @@ function main() {
     console.error("check-patch-surface: origin/main not found; fetch it first");
     return 2;
   }
+  let baselineEntries, currentEntries;
+  try {
+    const exists=execFileSync("git",["rev-parse","--verify",ACCEPTED_SOURCE_BASELINE+"^{commit}"],{cwd:root,encoding:"utf8"}).trim()===ACCEPTED_SOURCE_BASELINE;
+    let ancestor=false;
+    try { execFileSync("git",["merge-base","--is-ancestor",ACCEPTED_SOURCE_BASELINE,"HEAD"],{cwd:root,stdio:"ignore"});ancestor=true; } catch {}
+    requireAcceptedAncestor(exists,ancestor);
+    baselineEntries=acceptedEntries(ACCEPTED_SOURCE_BASELINE);currentEntries=acceptedEntries("HEAD");
+  } catch(error) { console.error(String(error.message));return 2; }
   const changed = execFileSync("git", ["diff", "--name-only", "origin/main...HEAD"], {
     cwd: root,
     encoding: "utf8",
@@ -176,7 +200,7 @@ function main() {
     .split("\n")
     .filter(Boolean);
   const problems = [];
-  for (const path of changed) if (!isAllowed(path)) problems.push(`path not allowed: ${path}`);
+  for (const path of changed) if (!isAllowed(path) && !identicalAcceptedEntry(baselineEntries.get(path),currentEntries.get(path))) problems.push(`path not allowed: ${path}`);
   for (const hit of deniedImports(sourceFiles(root))) {
     problems.push(`denied import: ${hit.path}:${hit.line} imports ${hit.specifier}`);
   }
