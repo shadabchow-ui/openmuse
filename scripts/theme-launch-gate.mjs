@@ -31,7 +31,7 @@ export async function measurePage(page,expectedBackground){
   const backgrounds=[...document.querySelectorAll("*")].filter(visible).map(e=>rgb(getComputedStyle(e).backgroundColor)).filter(Boolean);
   const controls=[...document.querySelectorAll('button,a[href],input,textarea,select,[tabindex]')].filter(e=>visible(e)&&e.tabIndex>=0&&!e.disabled&&e.getAttribute("aria-disabled")!=="true").length;
   const longAnimations=document.getAnimations().filter(a=>a.playState==="running"&&Number(a.effect?.getComputedTiming().duration)>200).map(a=>({duration:a.effect.getComputedTiming().duration}));
-  return{text:rows,backgrounds,controls,unknown,longAnimations};
+  return{text:rows,backgrounds,canvas:background(document.elementFromPoint(1,1)||document.body),controls,unknown,longAnimations};
  });
  const text=raw.text.map(r=>({...r,ratio:contrast(r.foreground,r.background)})),focus=[],seen=new Set();
  await page.evaluate(()=>document.activeElement?.blur());
@@ -44,8 +44,8 @@ export async function measurePage(page,expectedBackground){
   const fg=color(row.outline),bg=compositeBackground(row.backgroundChain);const ratio=fg?contrast(fg.slice(0,3).map((v,i)=>v*(fg[3]??1)+bg[i]*(1-(fg[3]??1))),bg):0;
   focus.push({...row,ratio,visible:row.visibleRect&&row.outlineWidth>0&&row.outlineStyle!=="none"&&ratio>=3});
  }
- const expected=color(expectedBackground),themeApplied=!!expected&&raw.backgrounds.some(c=>c.slice(0,3).every((v,i)=>Math.abs(v-expected[i])<1));
- return{text,focus,unknown:raw.unknown+(raw.controls>128?1:0),longAnimations:raw.longAnimations,themeApplied,scope:"visible viewport, empty/fixture state; physical displays/assistive technology/other browsers NOT_RUN"};
+ const expected=color(expectedBackground),themeApplied=!!expected&&raw.canvas.every((v,i)=>Math.abs(v-expected[i])<1);
+ return{text,focus,canvas:raw.canvas,unknown:raw.unknown+(raw.controls>128?1:0),longAnimations:raw.longAnimations,themeApplied,scope:"visible viewport, empty/fixture state; physical displays/assistive technology/other browsers NOT_RUN"};
 }
 export function literalScan(root){
  const files=[],walk=d=>{if(!statSync(d).isDirectory())return;for(const n of readdirSync(d)){const p=join(d,n),s=statSync(p);if(s.isDirectory())walk(p);else if(/\.(tsx|css)$/.test(n))files.push(p);}};
@@ -91,7 +91,7 @@ async function main(){
   await context.addInitScript(()=>localStorage.setItem("appearance.choice.v1","dark"));await context.route("**/*",r=>new URL(r.request().url()).origin===u.origin?r.continue():r.abort());
   const page=await context.newPage();page.setDefaultTimeout(5000);await page.goto(origin+"/muse");await page.getByRole("textbox",{name:"Message OpenMuse"}).waitFor();
   await page.addStyleTag({content:"*{color:rgb(150,150,150)!important;background-color:rgb(151,151,151)!important}"});const low=await measurePage(page,t.darkTheme.background);mutations.push({name:"forced-low-contrast",failedAsExpected:low.text.some(p=>p.ratio<4.5)});
-  await page.evaluate(()=>localStorage.setItem("appearance.choice.v1","light"));await page.reload();await page.getByRole("textbox",{name:"Message OpenMuse"}).waitFor();const wrong=await measurePage(page,t.darkTheme.background);mutations.push({name:"dark-selection-removed",failedAsExpected:!wrong.themeApplied});await context.close();
+  await context.close();const changed=await browser.newContext({viewport:{width:1280,height:900},colorScheme:"light",reducedMotion:"reduce"});await changed.addInitScript(()=>localStorage.setItem("appearance.choice.v1","light"));await changed.route("**/*",r=>new URL(r.request().url()).origin===u.origin?r.continue():r.abort());const lightPage=await changed.newPage();await lightPage.goto(origin+"/muse");await lightPage.getByRole("textbox",{name:"Message OpenMuse"}).waitFor();const wrong=await measurePage(lightPage,t.darkTheme.background);mutations.push({name:"dark-selection-removed",failedAsExpected:!wrong.themeApplied,actualCanvas:wrong.canvas,expectedDark:t.darkTheme.background});await changed.close();
   const counts=Object.fromEntries(["PASS","FAIL","NOT_RUN"].map(s=>[s,cells.filter(c=>c.status===s).length])),result={environment:"local sandboxed browser; in-memory gateway fixtures, not a real consumer backend",sourcePin:"c03b183044295ee9c1005dfb3c86845f087bf5f0",browser:browser.version(),launchArgs,cells,counts,literalColors:literalScan(process.cwd()),mutations,composite:counts.FAIL||counts.NOT_RUN?"FAIL":"PASS",independentReview:"PENDING",nativeDevice:"NOT_RUN"};
   writeFileSync(join(out,"RESULTS.json"),JSON.stringify(result,null,2)+"\n");console.log(JSON.stringify({counts,mutations,composite:result.composite}));if(result.composite!=="PASS"||mutations.some(m=>!m.failedAsExpected))process.exitCode=1;
  }finally{await browser?.close();await server?.close();}
