@@ -14,6 +14,7 @@ import {
 import { useWorkspace } from "../workspace";
 import { approvalRow } from "./approvals";
 import type { PageId } from "./pages";
+import { RobotAvatarPreview } from "./RobotAvatarPreview";
 import { useRobot } from "./RobotProvider";
 import { RobotStage } from "./RobotStage";
 
@@ -96,6 +97,7 @@ export function RobotOverview({ onOpenPage }: { onOpenPage: (page: PageId) => vo
       ) : null}
 
       <Card style={{ gap: 8 }}>
+        <RobotAvatarPreview />
         <RobotStage presence={presence} offline={offline} />
         {presenceStatus === "unavailable" ? <Text style={s.muted}>Not available yet.</Text> : null}
         <ErrorNotice error={presenceStatus === "error" ? robot.presenceError : undefined} />
